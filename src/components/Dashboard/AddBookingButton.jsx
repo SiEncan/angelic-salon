@@ -1,0 +1,357 @@
+import { useState, useEffect } from "react";
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from "framer-motion";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { collection, getDocs, query, where, addDoc, Timestamp } from "firebase/firestore";
+import { db } from "../../firebase";
+import dayjs from "dayjs";
+
+import EmployeeSelection from "./EmployeeSelection";
+
+const serviceOptions = [
+  { name: "Haircut", duration: 30, price:100000 },
+  { name: "Hair Coloring", duration: 60, price:200000 },
+  { name: "Creambath", duration: 60, price: 120000 },
+  { name: "Menicure", duration: 30, price: 50000 },
+  { name: "Pedicure", duration: 30, price: 75000 },
+];
+
+const AddBookingButton = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isWarning, setIsWarning] = useState(false)
+  const [isSearching, setIsSearching] = useState(false);
+
+  const [nameInput, setNameInput] = useState("");
+  const [phone, setPhone] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [services, setServices] = useState([]);
+
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [suggestions, setSuggestions] = useState([]);
+
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  const handleSaveBooking = async () => {
+    console.log(selectedEmployee)
+    if ( !date || !time || services.length === 0 || !selectedEmployee) {
+      setIsWarning(true); // Tampilkan pop-up alert
+      return;
+    }
+  
+    try {
+      const bookingData = {
+        customerId: selectedUser.id,
+        customerName: selectedUser.fullName,
+        phone: selectedUser.phone || "",
+        date,
+        time,
+        endTime,
+        services,
+        totalPrice,
+        employeeName: selectedEmployee,
+        status: "Booked", // Status awal
+        createdAt: Timestamp.now(), // Waktu pembuatan booking
+      };
+  
+      // Simpan ke Firestore
+      await addDoc(collection(db, "bookings"), bookingData);
+  
+      alert("Booking successfully saved!");
+      setIsOpen(false); // Tutup modal setelah berhasil
+      setNameInput("");
+      setPhone("");
+      setDate("");
+      setTime("");
+      setEndTime("");
+      setTotalPrice(0);
+      setServices([]);
+      setSelectedUser(null);
+      setSelectedEmployee(null);
+    } catch (error) {
+      console.error("Error saving booking:", error);
+      alert("Failed to save booking. Please try again.");
+    }
+  };  
+
+  const handleSearchCustomer = async () => {
+    if (nameInput.trim() === "") {
+      setSuggestions([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true); // Menandai bahwa pencarian sedang dilakukan
+
+    try {
+        const q = query(
+        collection(db, "users"),
+        where("fullName", ">=", nameInput),
+        where("fullName", "<=", nameInput + "\uf8ff")
+        );
+
+        const querySnapshot = await getDocs(q);
+        const fetchedCustomers = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        }));
+
+        setSuggestions(fetchedCustomers);
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+        setSuggestions([]);
+      }
+  };
+
+    useEffect(() => {
+      if (selectedUser) {
+        setNameInput(selectedUser.fullName);
+        setPhone(selectedUser.phone || "No phone number");
+      }
+    }, [selectedUser]);
+
+    const handleSelectUser = (user) => {
+      setSelectedUser(user);
+      setSuggestions([]);
+      setIsSearching(false); // Reset pencarian setelah user dipilih
+    };
+
+    const calculateEndTime = (startTime, totalDuration) => {
+      const [hours, minutes] = startTime.split(":").map(Number);
+      const endDate = new Date();
+      endDate.setHours(hours);
+      endDate.setMinutes(minutes + totalDuration);
+
+      return endDate.toTimeString().slice(0, 5);
+    };
+
+    const handleServiceChange = (service) => {
+      setServices((prev) => {
+      const updatedServices = prev.includes(service)
+        ? prev.filter((s) => s !== service)
+        : [...prev, service];
+
+      // Hitung total duration berdasarkan services yang dipilih
+      const totalDuration = updatedServices.reduce((sum, s) => {
+        const serviceObj = serviceOptions.find((opt) => opt.name === s);
+        return sum + (serviceObj ? serviceObj.duration : 0);
+      }, 0);
+
+      // Hitung total price berdasarkan services yang dipilih
+      const totalPrice = updatedServices.reduce((sum, s) => {
+        const serviceObj = serviceOptions.find((opt) => opt.name === s);
+        return sum + (serviceObj ? serviceObj.price : 0);
+      }, 0);
+      setTotalPrice(totalPrice);
+
+      if (time) {
+        const calculatedEndTime = calculateEndTime(time, totalDuration);
+        setEndTime(calculatedEndTime);
+      }
+        return updatedServices;
+      });
+    };
+  
+
+  return (
+    <>
+      {/* Button untuk membuka modal */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="bg-purple-500 text-white px-4 py-2 rounded"
+      >
+        + Add Booking
+      </button>
+
+      {/* Modal Floating */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Overlay dengan animasi yang lebih smooth */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-black bg-opacity-50"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="fixed inset-0 flex justify-center items-center"
+            >
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
+                <h2 className="text-xl font-bold mb-4">Add Booking</h2>
+
+                {/* Input Nama dengan Auto-Suggest */}
+                <div className="relative w-full">
+                  <input
+                  type="text"
+                  placeholder="Type name..."
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                      handleSearchCustomer(); // Jalankan pencarian saat Enter ditekan
+                      }
+                  }}
+                  className="p-2 w-full pr-12 border rounded shadow-sm outline-none"
+                  />
+                  <button
+                  onClick={handleSearchCustomer}
+                  
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
+                  >
+                  <MagnifyingGlassIcon className="h-6 w-4" />
+                  </button>
+
+                  {/* Floating Daftar Sugesti */}
+                  {suggestions.length > 0 ? (
+                      <ul className="absolute left-0 top-full mt-1 w-full bg-white border shadow-lg rounded max-h-40 overflow-auto z-50 p-0">
+                        {suggestions.map((user) => (
+                          <li
+                            key={user.id}
+                            onClick={() => handleSelectUser(user)}
+                            className="p-2 cursor-pointer hover:bg-gray-200"
+                            >
+                            {user.fullName}
+                          </li>
+                        ))}
+                      </ul>
+                      ) : (
+                      isSearching && suggestions.length === 0 && (
+                        <div className="absolute left-0 top-full mt-1 w-full bg-white border shadow-lg rounded p-2 text-gray-500">
+                        No Results...
+                        </div>
+                      )
+                  )}
+                </div>
+
+                {/* Input Nomor HP */}
+                <input
+                  type="text"
+                  placeholder="Phone Number"
+                  value={phone}
+                  readOnly
+                  className="border p-2 w-full mt-2 rounded shadow-sm"
+                />
+
+                {/* Input Date */}
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(dayjs(e.target.value).format("YYYY-MM-DD"))}
+                  className="border p-2 w-full mt-2 rounded shadow-sm"
+                />
+
+                {/* Input Time */}
+                <input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)} // Tambahkan handler untuk time
+                  className="border p-2 w-full mt-2 rounded shadow-sm"
+                />
+
+                {/* Pilihan Services */}
+                
+                <div className="mt-2">
+                <h3 className="text-xl font-semibold">Services:</h3>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {serviceOptions.map((service) => (
+                  <button
+                      key={service.name}
+                      onClick={() => handleServiceChange(service.name)}
+                      className={`px-3 w-full text-left py-1 border rounded ${
+                      services.includes(service.name) ? "bg-blue-500 text-white" : "bg-gray-200"
+                      }`}
+                      style={{height: '40px' }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span>{service.name}</span>
+                      <span>Rp{Number(service.price).toLocaleString('id-ID')}</span>
+                    </div>
+                  </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-2">
+                <h3 className="text-lg font-semibold mb-0">Total Price:</h3>
+                <p className="text-md font-semibold text-grey-200">
+                  Rp{Number(totalPrice).toLocaleString('id-ID')}
+                </p>
+              </div>
+
+              {/* Employee Selection */}
+              {date && time && services.length > 0 && (
+              <EmployeeSelection 
+                  date={date} 
+                  services={services} 
+                  time={time} 
+                  endTime={endTime} 
+                  selectedEmployee={selectedEmployee}
+                  setSelectedEmployee={setSelectedEmployee}
+              />
+              )}
+
+              {/* Pop-up Alert */}
+              {isWarning && (
+                <div
+                  className="fixed z-50 flex items-center justify-center"
+                  onClick={() => setIsWarning(false)}
+                >
+                  <div
+                      className={`fixed top-5 right-5 bg-red-500 text-white px-4 py-2 rounded shadow-md transition-all duration-3`}
+                      style={{ zIndex: 9999 }}
+                    >
+                    <p className="text-center font-semibold">Please fill all required fields!</p>
+                    <button
+                      className="px-4 py-2 bg-red-600 rounded hover:bg-red-800"
+                      onClick={() => setIsWarning(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Tombol Simpan */}
+              <div className="flex justify-between mt-4">
+                <button
+                  onClick={() => {setIsOpen(false); setNameInput("");
+                    setPhone("");
+                    setDate("");
+                    setTime("");
+                    setEndTime("");
+                    setServices([]);
+                    setSelectedUser(null);
+                    setSelectedEmployee(null);
+                    setTotalPrice(0);
+                    }
+                  }
+                  className="bg-gray-500 text-white px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveBooking} 
+                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                >
+                  Save Booking
+                </button>
+              </div>
+            </div>
+          </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
+export default AddBookingButton;

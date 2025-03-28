@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap');
+
+.Brand {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+}
+.hero-content h1 {
+  color: #F7E5C1;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hero-content p {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: 900px;
+  background: url("../assets/images/Section 1.png") no-repeat center center/cover;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Pindahkan ke kiri */
+  padding-left: 200px; /* Beri jarak dari tepi kiri */
+}
+
+.hero-content {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  position: relative;
+  text-align: left; /* Sesuaikan teks ke kiri */
+  color: white;
+  padding: 20px;
+}
+
+
+.book-now-btn {
+  background-color: #C8BCAC;
+  color: white;
+  border-radius: 0;
+  border: none,
+}
+
+.our-service-btn {
+  background: transparent;
+  border-radius: 0;
+  border-color: #C8BCAC;
+  border: '1px solid';
+}
+
+.book-now-btn:hover {
+  background-color: #a89f8e;
+  color: #fff; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+}
+
+.our-service-btn:hover {
+  background: transparent;
+  border-color: #a89f8e;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
