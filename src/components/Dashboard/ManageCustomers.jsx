@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon } from "@heroicons/react/24/outline";
 import { useNavigate, Link, useLocation } from "react-router-dom";  // Menggunakan useLocation untuk memeriksa route aktif
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
 import { doc, getDoc, getDocs, collection } from "firebase/firestore";
@@ -87,12 +87,11 @@ const ManageCustomers = () => {
         </div>
         <nav className="flex-1 px-2 py-4 space-y-3">
           {[{ icon: HomeIcon, label: "Dashboard", path: "/admin-dashboard" },
-            { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
             { icon: ClipboardDocumentListIcon, label: "Bookings", path: "/admin-dashboard/bookings" },
-            { icon: CalendarIcon, label: "Calendar" },
-            { icon: DocumentIcon, label: "Documents" },
-            { icon: ChartPieIcon, label: "Reports" }
-          ].map((item, index) => (
+            { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
+            { icon: ScissorsIcon, label: "Manage Services", path: "/admin-dashboard/manage-services" },
+            { icon: DocumentIcon, label: "Documents", path: "/documents" },
+            { icon: ChartPieIcon, label: "Reports", path: "/reports" }].map((item, index) => (
             <Link
               key={index}
               to={item.path}
@@ -117,14 +116,16 @@ const ManageCustomers = () => {
       {/* Main content */}
       <div className="flex-1 flex flex-col md:ml-64 overflow-hidden">
         <header className="w-full">
-          <div className="relative md:z-auto z-10 flex-shrink-0 flex h-16 bg-white shadow">
+          <div className="relative md:z-auto z-10 items-center justify-center flex-shrink-0 flex h-16 bg-white shadow">
             {/* Sidebar Toggle Button */}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="ml-4 focus:outline-none md:hidden"
             >
-              <Bars3Icon className="h-6 w-6" />
+              <Bars3Icon className="h-6 w-6 mar" />
             </button>
+
+            <h2 className="text-2xl font-bold mt-1 ml-8 text-gray-700">Manage Customers</h2>
 
             {/* Spacer */}
             <div className="flex-1"></div>
@@ -152,13 +153,6 @@ const ManageCustomers = () => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          {/* Halaman Manage Customers */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold mb-4 flex items-center">
-              Manage Customers
-            </h2>
-          </div>
-
           {/* Tabel Daftar Customer */}
           <div className="overflow-x-auto bg-white shadow rounded-lg">
             <table className="min-w-full table-auto">

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon } from "@heroicons/react/24/outline";
 import { useNavigate, Link, useLocation } from "react-router-dom"; // Import useLocation
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, getDocs, collection, where, query } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau status autentikasi
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import dayjs from "dayjs";
 
 const AdminDashboard = () => {
   const [loggedName, setLoggedName] = useState("");
@@ -14,15 +15,85 @@ const AdminDashboard = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const data = [
-    { day: "Mon", bookings: 5 },
-    { day: "Tue", bookings: 8 },
-    { day: "Wed", bookings: 12 },
-    { day: "Thu", bookings: 7 },
-    { day: "Fri", bookings: 10 },
-    { day: "Sat", bookings: 15 },
-    { day: "Sun", bookings: 6 },
-  ];
+  const [chartData, setChartData] = useState([]);
+  const [customerCount, setCustomerCount] = useState([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [totalBookings, setTotalBookings] = useState(0);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        // Ambil awal dan akhir bulan ini
+        const firstDay = dayjs().startOf("month").format("YYYY-MM-DD");
+        const lastDay = dayjs().endOf("month").format("YYYY-MM-DD");
+
+        // Query hanya booking dalam bulan ini
+        const bookingsQuery = query(
+          collection(db, "bookings"),
+          where("date", ">=", firstDay),
+          where("date", "<=", lastDay)
+        );
+
+        const querySnapshot = await getDocs(bookingsQuery);
+        const bookings = querySnapshot.docs.map((doc) => doc.data());
+
+        // Generate array tanggal dalam bulan ini
+        const daysInMonth = Array.from(
+          { length: dayjs().daysInMonth() },
+          (_, i) => dayjs().startOf("month").add(i, "day").format("YYYY-MM-DD")
+        );
+
+        // Inisialisasi data booking dengan 0
+        const dayCounts = daysInMonth.reduce((acc, date) => ({ ...acc, [date]: { bookings: 0, revenue: 0 } }), {});
+        let totalRevenueSum = 0;
+        let totalBookingsCount = 0;
+
+        // Hitung jumlah booking dan total revenue
+        bookings.forEach((booking) => {
+          const bookingDate = dayjs(booking.date).format("YYYY-MM-DD");
+          if (dayCounts[bookingDate]) {
+            dayCounts[bookingDate].bookings += 1;
+            if (booking.status == "Completed") {
+              totalRevenueSum += booking.totalPrice || 0;
+              dayCounts[bookingDate].revenue += booking.totalPrice || 0;
+            }
+            totalBookingsCount += 1;
+          }
+        });
+
+        // Format data untuk grafik
+        const formattedData = daysInMonth.map((date) => ({
+          date,
+          bookings: dayCounts[date].bookings,
+          dailyRevenue: dayCounts[date].revenue,
+        }));
+
+        setChartData(formattedData);
+        setTotalRevenue(totalRevenueSum.toLocaleString("id-ID"));
+        setTotalBookings(totalBookingsCount);
+      } catch (error) {
+        console.error("Error fetching bookings: ", error);
+      }
+    };
+
+    const fetchCustomers = async () => {
+      try {
+        // Query hanya untuk user dengan role "customer"
+        const customersQuery = query(
+          collection(db, "users"),
+          where("role", "==", "customer")
+        );
+
+        const querySnapshot = await getDocs(customersQuery);
+        setCustomerCount(querySnapshot.size); // Menghitung jumlah dokumen dengan role "customer"
+      } catch (error) {
+        console.error("Error fetching customers: ", error);
+      }
+    };
+
+    fetchCustomers();
+    fetchBookings();
+  }, []);
 
   useEffect(() => {
     // Memantau perubahan status autentikasi
@@ -73,9 +144,9 @@ const AdminDashboard = () => {
         </div>
         <nav className="flex-1 px-2 py-4 space-y-3">
           {[{ icon: HomeIcon, label: "Dashboard", path: "/admin-dashboard" },
-            { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
             { icon: ClipboardDocumentListIcon, label: "Bookings", path: "/admin-dashboard/bookings" },
-            { icon: CalendarIcon, label: "Calendar", path: "/calendar" },
+            { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
+            { icon: ScissorsIcon, label: "Manage Services", path: "/admin-dashboard/manage-services" },
             { icon: DocumentIcon, label: "Documents", path: "/documents" },
             { icon: ChartPieIcon, label: "Reports", path: "/reports" }].map((item, index) => (
             <Link
@@ -101,7 +172,7 @@ const AdminDashboard = () => {
       {/* Main content */}
       <div className="flex-1 flex flex-col md:ml-64 overflow-hidden">
         <header className="w-full">
-          <div className="relative md:z-auto z-10 flex-shrink-0 flex h-16 bg-white shadow">
+         <div className="relative md:z-auto z-10 items-center justify-center flex-shrink-0 flex h-16 bg-white shadow">
             {/* Sidebar Toggle Button */}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -109,6 +180,8 @@ const AdminDashboard = () => {
             >
               <Bars3Icon className="h-6 w-6 mar" />
             </button>
+
+            <h2 className="text-2xl font-bold mt-1 ml-8 text-gray-700">Main Dashboard</h2>
 
             {/* Spacer */}
             <div className="flex-1"></div>
@@ -136,21 +209,22 @@ const AdminDashboard = () => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-          </div>
-
           <div className="bg-white shadow rounded-lg p-4 mb-6 overflow-x-auto">
             <div className="w-[600px] md:w-full">
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Booking Statistics (Last 7 Days)</h3>
+            <h3 className="text-lg font-medium text-gray-700 mb-4">Booking Statistics (This Month)</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="day" />
+                <XAxis dataKey="date" tickFormatter={(tick) => dayjs(tick).format("D")} />
                 <YAxis />
-                <Tooltip />
-                <Line type="linear" dataKey="bookings" stroke="#6366F1" strokeWidth={3} />
+                <Tooltip
+                  formatter={(value, name, props) => {
+                    const revenue = props.payload?.dailyRevenue || 0;
+                    return [`Rp${revenue.toLocaleString("id-ID")}`, `${value} Bookings`];
+                  }}
+                  labelFormatter={(label) => `${dayjs(label).format("DD MMM YYYY")}`}
+                />
+                <Line type="linear" dataKey="bookings" stroke="#3B82F6" dot={{ r: 2 }} strokeWidth={2.5} />
               </LineChart>
             </ResponsiveContainer>
             </div>
@@ -160,15 +234,15 @@ const AdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-white p-4 shadow rounded-lg">
               <h3 className="text-lg font-medium text-gray-700">Total Users</h3>
-              <p className="text-2xl font-bold text-gray-900">1,234</p>
+              <p className="text-2xl font-bold text-gray-900">{customerCount}</p>
             </div>
             <div className="bg-white p-4 shadow rounded-lg">
               <h3 className="text-lg font-medium text-gray-700">Total Bookings</h3>
-              <p className="text-2xl font-bold text-gray-900">567</p>
+              <p className="text-2xl font-bold text-gray-900">{totalBookings}</p>
             </div>
             <div className="bg-white p-4 shadow rounded-lg">
               <h3 className="text-lg font-medium text-gray-700">Revenue</h3>
-              <p className="text-2xl font-bold text-gray-900">$12,345</p>
+              <p className="text-2xl font-bold text-gray-900">Rp{totalRevenue}</p>
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon } from "@heroicons/react/24/outline";
 import { CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, Link } from "react-router-dom"; // Import useLocation
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
@@ -160,9 +160,9 @@ const AddCustomer = () => {
         </div>
         <nav className="flex-1 px-2 py-4 space-y-3">
           {[{ icon: HomeIcon, label: "Dashboard", path: "/admin-dashboard" },
-            { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
             { icon: ClipboardDocumentListIcon, label: "Bookings", path: "/admin-dashboard/bookings" },
-            { icon: CalendarIcon, label: "Calendar", path: "/calendar" },
+            { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
+            { icon: ScissorsIcon, label: "Manage Services", path: "/admin-dashboard/manage-services" },
             { icon: DocumentIcon, label: "Documents", path: "/documents" },
             { icon: ChartPieIcon, label: "Reports", path: "/reports" }].map((item, index) => (
             <Link

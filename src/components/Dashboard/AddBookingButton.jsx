@@ -8,14 +8,6 @@ import dayjs from "dayjs";
 
 import EmployeeSelection from "./EmployeeSelection";
 
-const serviceOptions = [
-  { name: "Haircut", duration: 30, price:100000 },
-  { name: "Hair Coloring", duration: 60, price:200000 },
-  { name: "Creambath", duration: 60, price: 120000 },
-  { name: "Menicure", duration: 30, price: 50000 },
-  { name: "Pedicure", duration: 30, price: 75000 },
-];
-
 const AddBookingButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isWarning, setIsWarning] = useState(false)
@@ -33,14 +25,34 @@ const AddBookingButton = () => {
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [serviceOptions, setServiceOptions] = useState([]);
 
   const [existingBookings, setExistingBookings] = useState([]);
 
   const handleDateChange = (e) => {
     const selectedDate = dayjs(e.target.value).format("YYYY-MM-DD");
     setDate(selectedDate);
+    setSelectedEmployee(null);
     fetchBookings(selectedDate);
   };
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "services"));
+        const servicesData = querySnapshot.docs.map((doc) => ({
+          id: doc.id, // Simpan ID dari Firestore
+          ...doc.data(), // Ambil semua field dari Firestore
+        }));
+
+        setServiceOptions(servicesData);
+      } catch (error) {
+        console.error("Error fetching services: ", error);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   const fetchBookings = async (date) => {
     console.log('fetch!')
@@ -161,6 +173,7 @@ const AddBookingButton = () => {
   }, [time, services]); // Akan dijalankan setiap kali `time` atau `services` berubah  
 
   const handleServiceChange = (service) => {
+    setSelectedEmployee(null);
     setServices((prev) => {
       const updatedServices = prev.includes(service)
         ? prev.filter((s) => s !== service)
@@ -279,7 +292,7 @@ const AddBookingButton = () => {
                   type="time"
                   value={time}
                   onChange={(e) => {
-                    console.log(e.target.value)
+                    setSelectedEmployee(null);
                     setTime(e.target.value)} // Tambahkan handler untuk time
                   } 
                   className="border p-2 w-full mt-2 rounded shadow-sm"

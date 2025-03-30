@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ChevronLeftIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ChevronLeftIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon, ScissorsIcon } from "@heroicons/react/24/outline";
 import { useNavigate, Link, useLocation } from "react-router-dom"; // Import useLocation
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
@@ -183,10 +183,10 @@ const Bookings = () => {
           />
         </div>
         <nav className="flex-1 px-2 py-4 space-y-3">
-          {[{ icon: HomeIcon, label: "Dashboard", path: "/admin-dashboard" },
-            { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
+         {[{ icon: HomeIcon, label: "Dashboard", path: "/admin-dashboard" },
             { icon: ClipboardDocumentListIcon, label: "Bookings", path: "/admin-dashboard/bookings" },
-            { icon: CalendarIcon, label: "Calendar", path: "/calendar" },
+            { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
+            { icon: ScissorsIcon, label: "Manage Services", path: "/admin-dashboard/manage-services" },
             { icon: DocumentIcon, label: "Documents", path: "/documents" },
             { icon: ChartPieIcon, label: "Reports", path: "/reports" }].map((item, index) => (
             <Link
@@ -212,7 +212,7 @@ const Bookings = () => {
       {/* Main content */}
       <div className="flex-1 flex flex-col md:ml-64 overflow-hidden">
         <header className="w-full">
-          <div className="relative md:z-auto z-10 flex-shrink-0 flex h-16 bg-white shadow">
+          <div className="relative md:z-auto z-10 items-center justify-center flex-shrink-0 flex h-16 bg-white shadow">
             {/* Sidebar Toggle Button */}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -220,6 +220,8 @@ const Bookings = () => {
             >
               <Bars3Icon className="h-6 w-6 mar" />
             </button>
+
+            <h2 className="text-2xl font-bold mt-1 ml-8 text-gray-700">Booking List</h2>
 
             {/* Spacer */}
             <div className="flex-1"></div>
@@ -277,8 +279,8 @@ const Bookings = () => {
                   className="mt-2 p-2 border rounded-md"
                 >
                   <option value="">All Status</option>
-                  <option value="Pending">Booked</option>
-                  <option value="Confirmed">In Progress</option>
+                  <option value="Booked">Booked</option>
+                  <option value="In Progress">In Progress</option>
                   <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>
                 </select>

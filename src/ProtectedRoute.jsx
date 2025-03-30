@@ -20,7 +20,7 @@ const ProtectedRoute = ({ element }) => {
           if (role === 'admin') {
             setIsAdmin(true);
           } else {
-            navigate('/');  // Jika bukan admin, redirect ke halaman lain (misalnya, homepage)
+            navigate('/');  // Jika bukan admin, redirect ke halaman homepage
           }
         }
       } else {
@@ -33,8 +33,12 @@ const ProtectedRoute = ({ element }) => {
   }, [navigate]);
 
   if (loading) {
-    return <div>Loading...</div>;  // Menampilkan loading sementara pengecekan
-  }
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-12 h-12 border-4 border-pink-500 border-dashed rounded-full animate-spin"></div>
+      </div>
+    );
+  }  
 
   return isAdmin ? element : null;
 };

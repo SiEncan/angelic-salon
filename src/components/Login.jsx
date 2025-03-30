@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import "../styles/Loading.css"; // Tambahkan file CSS untuk animasi loading
-
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,8 +58,8 @@ function Login() {
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="loading-bar"></div>
+      <div className="flex justify-center items-center h-screen">
+        <div className="w-12 h-12 border-4 border-pink-500 border-dashed rounded-full animate-spin"></div>
       </div>
     );
   }
