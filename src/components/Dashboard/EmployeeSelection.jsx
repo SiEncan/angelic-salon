@@ -1,33 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { db } from "../../firebase"; // Ganti dengan path yang benar
-import { collection, getDocs } from "firebase/firestore";
+const employeesList = ["Yuli", "Isni", "Dini"];
 
-const employeesList = ["Yuli", "Lusi", "Via"];
-
-const EmployeeSelection = ({ date, services, time, endTime, selectedEmployee, setSelectedEmployee }) => {
-  const [existingBookings, setExistingBookings] = useState([]);
-
-  useEffect(() => {
-    // Fungsi untuk mengambil data dari Firestore
-    const fetchBookings = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "bookings"));
-        const bookings = querySnapshot.docs.map(doc => doc.data());
-        setExistingBookings(bookings);
-      } catch (error) {
-        console.error("Error fetching bookings: ", error);
-      }
-    };
-
-    fetchBookings();
-  }, []); // Efek berjalan sekali saat komponen pertama kali dimuat
+const EmployeeSelection = ({ date, services, existingBookings, time, endTime, selectedEmployee, setSelectedEmployee }) => {
 
   if (!date || !time || services.length === 0) return null;
 
   const availableEmployees = employeesList.filter((employee) => {
     return !existingBookings.some((booking) =>
       booking.employeeName === employee &&
-      booking.date === date &&
       (
         (time >= booking.time && time < booking.endTime) ||  // Waktu mulai bentrok
         (endTime > booking.time && endTime <= booking.endTime) ||  // Waktu selesai bentrok

@@ -34,8 +34,29 @@ const AddBookingButton = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
+  const [existingBookings, setExistingBookings] = useState([]);
+
+  const handleDateChange = (e) => {
+    const selectedDate = dayjs(e.target.value).format("YYYY-MM-DD");
+    setDate(selectedDate);
+    fetchBookings(selectedDate);
+  };
+
+  const fetchBookings = async (date) => {
+    console.log('fetch!')
+    try {
+      const querySnapshot = await getDocs(
+        query(collection(db, "bookings"), where("date", "==", date))
+      );
+      const bookings = querySnapshot.docs.map((doc) => doc.data());
+      console.log(bookings)
+      setExistingBookings(bookings);
+    } catch (error) {
+      console.error("Error fetching bookings: ", error);
+    }
+  };
+
   const handleSaveBooking = async () => {
-    console.log(selectedEmployee)
     if ( !date || !time || services.length === 0 || !selectedEmployee) {
       setIsWarning(true); // Tampilkan pop-up alert
       return;
@@ -43,9 +64,8 @@ const AddBookingButton = () => {
   
     try {
       const bookingData = {
-        customerId: selectedUser.id,
-        customerName: selectedUser.fullName,
-        phone: selectedUser.phone || "",
+        customerName: selectedUser?.fullName ?? nameInput,
+        phone: selectedUser?.phone ?? phone,
         date,
         time,
         endTime,
@@ -105,54 +125,58 @@ const AddBookingButton = () => {
       }
   };
 
-    useEffect(() => {
-      if (selectedUser) {
-        setNameInput(selectedUser.fullName);
-        setPhone(selectedUser.phone || "No phone number");
-      }
-    }, [selectedUser]);
+  useEffect(() => {
+    if (selectedUser) {
+      setNameInput(selectedUser.fullName);
+      setPhone(selectedUser.phone || "No phone number");
+    }
+  }, [selectedUser]);
 
-    const handleSelectUser = (user) => {
-      setSelectedUser(user);
-      setSuggestions([]);
-      setIsSearching(false); // Reset pencarian setelah user dipilih
-    };
+  const handleSelectUser = (user) => {
+    setSelectedUser(user);
+    setSuggestions([]);
+    setIsSearching(false); // Reset pencarian setelah user dipilih
+  };
 
-    const calculateEndTime = (startTime, totalDuration) => {
-      const [hours, minutes] = startTime.split(":").map(Number);
-      const endDate = new Date();
-      endDate.setHours(hours);
-      endDate.setMinutes(minutes + totalDuration);
+  const calculateEndTime = (startTime, totalDuration) => {
+    const [hours, minutes] = startTime.split(":").map(Number);
+    const endDate = new Date();
+    endDate.setHours(hours);
+    endDate.setMinutes(minutes + totalDuration);
 
-      return endDate.toTimeString().slice(0, 5);
-    };
+    return endDate.toTimeString().slice(0, 5);
+  };
 
-    const handleServiceChange = (service) => {
-      setServices((prev) => {
-      const updatedServices = prev.includes(service)
-        ? prev.filter((s) => s !== service)
-        : [...prev, service];
 
-      // Hitung total duration berdasarkan services yang dipilih
-      const totalDuration = updatedServices.reduce((sum, s) => {
+  useEffect(() => {
+    if (time && services.length > 0) {
+      const totalDuration = services.reduce((sum, s) => {
         const serviceObj = serviceOptions.find((opt) => opt.name === s);
         return sum + (serviceObj ? serviceObj.duration : 0);
       }, 0);
+  
+      const calculatedEndTime = calculateEndTime(time, totalDuration);
+      setEndTime(calculatedEndTime);
+    }
+  }, [time, services]); // Akan dijalankan setiap kali `time` atau `services` berubah  
 
-      // Hitung total price berdasarkan services yang dipilih
+  const handleServiceChange = (service) => {
+    setServices((prev) => {
+      const updatedServices = prev.includes(service)
+        ? prev.filter((s) => s !== service)
+        : [...prev, service];
+  
+      // Hitung total price
       const totalPrice = updatedServices.reduce((sum, s) => {
         const serviceObj = serviceOptions.find((opt) => opt.name === s);
         return sum + (serviceObj ? serviceObj.price : 0);
       }, 0);
+      
       setTotalPrice(totalPrice);
-
-      if (time) {
-        const calculatedEndTime = calculateEndTime(time, totalDuration);
-        setEndTime(calculatedEndTime);
-      }
-        return updatedServices;
-      });
-    };
+  
+      return updatedServices;
+    });
+  };  
   
 
   return (
@@ -238,7 +262,7 @@ const AddBookingButton = () => {
                   type="text"
                   placeholder="Phone Number"
                   value={phone}
-                  readOnly
+                  onChange={(e) => setPhone(e.target.value)}
                   className="border p-2 w-full mt-2 rounded shadow-sm"
                 />
 
@@ -246,7 +270,7 @@ const AddBookingButton = () => {
                 <input
                   type="date"
                   value={date}
-                  onChange={(e) => setDate(dayjs(e.target.value).format("YYYY-MM-DD"))}
+                  onChange={handleDateChange}
                   className="border p-2 w-full mt-2 rounded shadow-sm"
                 />
 
@@ -254,7 +278,10 @@ const AddBookingButton = () => {
                 <input
                   type="time"
                   value={time}
-                  onChange={(e) => setTime(e.target.value)} // Tambahkan handler untuk time
+                  onChange={(e) => {
+                    console.log(e.target.value)
+                    setTime(e.target.value)} // Tambahkan handler untuk time
+                  } 
                   className="border p-2 w-full mt-2 rounded shadow-sm"
                 />
 
@@ -293,6 +320,7 @@ const AddBookingButton = () => {
                   date={date} 
                   services={services} 
                   time={time} 
+                  existingBookings={existingBookings}
                   endTime={endTime} 
                   selectedEmployee={selectedEmployee}
                   setSelectedEmployee={setSelectedEmployee}

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ChevronLeftIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
 import { useNavigate, Link, useLocation } from "react-router-dom"; // Import useLocation
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from "framer-motion";
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
-import { doc, getDoc, collection, onSnapshot, updateDoc } from "firebase/firestore";
+import { doc, getDoc, collection, onSnapshot, updateDoc, where, query } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau status autentikasi
 import AddBookingButton from "./AddBookingButton";
 import StatusDropdown from "./StatusDropdown";
@@ -20,44 +22,71 @@ const Bookings = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [editedBookings, setEditedBookings] = useState({});
-  const [bookings, setBookings] = useState([]);
   const [currentPage, setCurrentPage] = useState(dayjs().month()); // Mulai dari bulan saat ini
+  
+  const [bookings, setBookings] = useState([]);  //// data awal dari database
+  const [filteredBookings, setFilteredBookings] = useState([]); /// data yang sudah difilter
+  const [sortedBookings, setSortedBookings] = useState([]); /// data (final) yang sudah difilter dan di sort
 
+  //////////////////////// FILTER TABLE
   const [selectedEmployee, setSelectedEmployee] = useState(""); // State untuk menyimpan pilihan employee
-  const employeesList = ["Yuli", "Lusi", "Via"];
+  const employeesList = ["Yuli", "Isni", "Dini"];
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+
+  ////////////////////// SORT TABLE
+  const [sortOrder, setSortOrder] = useState("desc"); // Default: terbaru dulu
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "bookings"), (snapshot) => {
+    const monthStart = dayjs().month(currentPage).startOf("month").format("YYYY-MM-DD");
+    const monthEnd = dayjs().month(currentPage).endOf("month").format("YYYY-MM-DD");
+
+    const bookingsQuery = query(
+      collection(db, "bookings"),
+      where("date", ">=", monthStart),
+      where("date", "<=", monthEnd)
+    );
+
+    const unsubscribe = onSnapshot(bookingsQuery, (snapshot) => {
       const bookingData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-  
-      // Filter berdasarkan bulan yang sedang dipilih dan employee yang dipilih
-      const filteredBookings = bookingData.filter((booking) => {
-        const bookingDate = dayjs(
-          booking.date.toDate ? booking.date.toDate() : booking.date
-        );
-        const isSameMonth = bookingDate.month() === currentPage;
 
-        // Jika selectedEmployee kosong, tampilkan semua booking. Jika tidak, hanya tampilkan yang sesuai dengan employee
-        const isEmployeeMatch = selectedEmployee ? booking.employeeName === selectedEmployee : true;
+      setBookings(bookingData); // Simpan data asli sebelum difilter
+    });
 
-        return isSameMonth && isEmployeeMatch;
-      });
-  
-      setBookings(filteredBookings);
+    return () => unsubscribe();
+  }, [currentPage]); // Hanya fetch ulang jika currentPage berubah
+
+  /////////////////////////////////////// FILTER TABLE
+  useEffect(() => {
+    const filteredBookings = bookings.filter((booking) => {
+      const isEmployeeMatch = selectedEmployee ? booking.employeeName === selectedEmployee : true;
+      const isStatusMatch = selectedStatus ? booking.status === selectedStatus : true;
+      const isDateMatch = selectedDate ? booking.date === selectedDate : true;
+      return isEmployeeMatch && isStatusMatch && isDateMatch;
     });
   
-    // Bersihkan listener saat komponen unmount
-    return () => unsubscribe();
-  }, [currentPage, selectedEmployee]); // Tambahkan selectedEmployee ke dependensi
+    setFilteredBookings(filteredBookings);
+  }, [bookings, selectedEmployee, selectedStatus, selectedDate]); // Hanya filtering jika filter berubah  
 
-  // Fungsi untuk menangani perubahan pada dropdown
-  const handleEmployeeChange = (event) => {
-    setSelectedEmployee(event.target.value);
+  /////////////////////////////////////////////////////// SORT TABLE
+  useEffect(() => {
+    const sorted = [...filteredBookings].sort((a, b) => {
+      return sortOrder === "asc"
+        ? new Date(a.date) - new Date(b.date)
+        : new Date(b.date) - new Date(a.date);
+    });
+
+    setSortedBookings(sorted);
+  }, [filteredBookings, sortOrder]); // Jalankan ulang sorting jika filteredBookings atau sortOrder berubah
+
+  // Fungsi untuk mengubah urutan sorting
+  const handleSortByDate = () => {
+    setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
   };
-
+  
   const saveStatusChange = async (bookingId) => {
     try {
       const bookingRef = doc(db, "bookings", bookingId);
@@ -93,7 +122,13 @@ const Bookings = () => {
       [bookingId]: newStatus,
     }));
   };
-  
+
+  useEffect(() => {
+    if (selectedDate) {
+      const selectedMonth = dayjs(selectedDate).month();
+      setCurrentPage(selectedMonth);
+    }
+  }, [selectedDate]);  
 
   const monthNames = dayjs().month(currentPage).format("MMMM YYYY");
 
@@ -212,88 +247,135 @@ const Bookings = () => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          <div className="bg-white shadow-md rounded-lg p-4">
+          <div className="bg-white shadow-md rounded-lg p-4 min-w-[1400px]">
             <h2 className="text-xl font-semibold mb-4">Booking - {monthNames}</h2>
-            {/* Employee Filter Dropdown */}
-            <div className="mb-4">
-              <label htmlFor="employeeSelect" className="block text-sm font-medium text-gray-700">Filter by Employee</label>
-              <select
-                id="employeeSelect"
-                value={selectedEmployee}
-                onChange={handleEmployeeChange}
-                className="mt-2 p-2 border rounded-md"
-              >
-                <option value="">All Employees</option>
-                {employeesList.map((employee, index) => (
-                  <option key={index} value={employee}>{employee}</option>
-                ))}
-              </select>
+            {/* Filter Dropdown */}
+            <div className="mb-4 flex gap-4">
+              {/* Filter by Employee */}
+              <div>
+                <label htmlFor="employeeSelect" className="block text-sm font-medium text-gray-700">Filter by Employee</label>
+                <select
+                  id="employeeSelect"
+                  value={selectedEmployee}
+                  onChange={(e) => setSelectedEmployee(e.target.value)}
+                  className="mt-2 p-2 border rounded-md"
+                >
+                  <option value="">All Employees</option>
+                  {employeesList.map((employee, index) => (
+                    <option key={index} value={employee}>{employee}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filter by Status */}
+              <div>
+                <label htmlFor="statusSelect" className="block text-sm font-medium text-gray-700">Filter by Status</label>
+                <select
+                  id="statusSelect"
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="mt-2 p-2 border rounded-md"
+                >
+                  <option value="">All Status</option>
+                  <option value="Pending">Booked</option>
+                  <option value="Confirmed">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              {/* Filter by Date */}
+              <div>
+                <label htmlFor="dateSelect" className="block text-sm font-medium text-gray-700">Filter by Date</label>
+                <input
+                  type="date"
+                  id="dateSelect"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="mt-2 p-2 border rounded-md"
+                />
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1400px] bg-white border border-gray-200 shadow-sm rounded-md">
-                <thead>
-                  <tr className="bg-gray-100 border-b">
-                    <th className="p-2 text-left">Name</th>
-                    <th className="p-2 text-left">Phone Number</th>
-                    <th className="p-2 text-left">Time</th>
-                    <th className="p-2 text-left" >Date</th>
-                    <th className="p-2 text-left" >Services</th>
-                    <th className="p-2 text-left">Employee</th>
-                    <th className="p-2 text-left">Price</th>
-                    <th className="p-2 text-left" style={{ width: '250px' }}>Booked At</th> {/* Set width for Booked At */}
-                    <th className="p-2 text-left" style={{ width: '300px' }}>Status</th> {/* Set a wider width for Status */}
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.length > 0 ? (
-                    bookings.map((booking) => (
-                      <tr key={booking.id} className="border-b">
-                        <td className="p-2">{booking.customerName}</td>
-                        <td className="p-2">{booking.phone}</td>
-                        <td className="p-2">{booking.time} - {booking.endTime}</td>
-                        <td className="p-2">{dayjs(booking.date).locale("id").format("dddd, D MMMM YYYY")}</td>
-                        <td className="p-2">{booking.services.join(", ")}</td>
-                        <td className="p-2">{booking.employeeName}</td>
-                        <td className="p-2">Rp{Number(booking.totalPrice).toLocaleString('id-ID')}</td>
-                        <td className="p-2">
-                          {dayjs(booking.createdAt.toDate()).locale("id").format("HH:MM | dddd, D MMMM YYYY")}
-                        </td>
-                        <td className="py-2 flex items-center relative">
-                          <StatusDropdown
-                            booking={booking}
-                            editedBookings={editedBookings}
-                            handleStatusChange={handleStatusChange}
-                          />
-                          {/* Tombol Save & Cancel */}
-                          <div
-                            className={`absolute right-0 top-1/2 -translate-y-1/2 flex mr-4 gap-1 transition-opacity duration-200 ${
-                              editedBookings[booking.id] ? "opacity-100 visible" : "opacity-0 invisible"
-                            }`}
-                          >
-                            <button
-                              onClick={() => saveStatusChange(booking.id)}
-                              className="bg-green-600 text-white px-3 py-1 rounded-full text-sm shadow-sm"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={() => cancelEdit(booking.id)}
-                              className="bg-red-500 text-white px-3 py-1 rounded-full text-sm shadow-sm"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="8" className="p-2 text-center text-gray-500">No Booking</td>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${currentPage}-${selectedDate}-${selectedEmployee}-${selectedStatus}-${sortOrder}`}
+                className="overflow-x-auto min-h-[500px] max-h-[500px]"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                >
+                {/* <div className="overflow-x-auto"> */}
+                <table className="w-full min-w-[1400px] bg-white border border-gray-200 shadow-sm rounded-md">
+                  <thead>
+                    <tr className="bg-gray-100 border-b">
+                      <th className="p-2 text-left">Name</th>
+                      <th className="p-2 text-left">Phone Number</th>
+                      <th className="p-2 text-left min-w-[130px]">Time</th>
+                      <th className="p-2 text-left cursor-pointer flex items-center gap-2" onClick={handleSortByDate}>
+                        Date
+                        {sortOrder === "asc" ? (
+                          <ArrowUpIcon className="w-4 h-4" />
+                        ) : (
+                          <ArrowDownIcon className="w-4 h-4" />
+                        )}
+                      </th>
+                      <th className="p-2 text-left" >Services</th>
+                      <th className="p-2 text-left">Employee</th>
+                      <th className="p-2 text-left">Price</th>
+                      <th className="p-2 text-left" style={{ width: '250px' }}>Booked At</th>
+                      <th className="p-2 text-left" style={{ width: '300px' }}>Status</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {sortedBookings.length > 0 ? (
+                      sortedBookings.map((booking) => (
+                        <tr key={booking.id} className="border-b">
+                          <td className="p-2">{booking.customerName}</td>
+                          <td className="p-2">{booking.phone}</td>
+                          <td className="p-2">{booking.time} - {booking.endTime}</td>
+                          <td className="p-2">{dayjs(booking.date).locale("id").format("dddd, D MMMM YYYY")}</td>
+                          <td className="p-2">{booking.services.join(", ")}</td>
+                          <td className="p-2">{booking.employeeName}</td>
+                          <td className="p-2">Rp{Number(booking.totalPrice).toLocaleString('id-ID')}</td>
+                          <td className="p-2">
+                            {dayjs(booking.createdAt.toDate()).locale("id").format("HH:mm | dddd, D MMMM YYYY")}
+                          </td>
+                          <td className="py-2 flex items-center relative">
+                            <StatusDropdown
+                              booking={booking}
+                              editedBookings={editedBookings}
+                              handleStatusChange={handleStatusChange}
+                            />
+                            {/* Tombol Save & Cancel */}
+                            {editedBookings[booking.id] && (
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 flex mr-4 gap-1">
+                                <button
+                                  onClick={() => saveStatusChange(booking.id)}
+                                  className="bg-green-600 text-white px-3 py-1 rounded-full text-sm shadow-sm"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => cancelEdit(booking.id)}
+                                  className="bg-red-500 text-white px-3 py-1 rounded-full text-sm shadow-sm"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="9" className="p-2 text-center text-gray-500">No Booking</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </motion.div>
+            </AnimatePresence>
             {/* Pagination */}
             <div className="mt-4 flex justify-between">
               <button
