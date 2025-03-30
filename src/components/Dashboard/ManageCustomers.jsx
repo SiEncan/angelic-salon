@@ -125,7 +125,7 @@ const ManageCustomers = () => {
               <Bars3Icon className="h-6 w-6 mar" />
             </button>
 
-            <h2 className="text-2xl font-bold mt-1 ml-8 text-gray-700">Manage Customers</h2>
+            <h2 className="text-sm sm:text-2xl font-bold mt-1 ml-8 text-gray-700">Manage Customers</h2>
 
             {/* Spacer */}
             <div className="flex-1"></div>
