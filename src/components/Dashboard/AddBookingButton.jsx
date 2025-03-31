@@ -170,7 +170,7 @@ const AddBookingButton = () => {
       const calculatedEndTime = calculateEndTime(time, totalDuration);
       setEndTime(calculatedEndTime);
     }
-  }, [time, services]); // Akan dijalankan setiap kali `time` atau `services` berubah  
+  }, [time, services, serviceOptions]); // Akan dijalankan setiap kali `time` atau `services` berubah  
 
   const handleServiceChange = (service) => {
     setSelectedEmployee(null);
@@ -197,7 +197,7 @@ const AddBookingButton = () => {
       {/* Button untuk membuka modal */}
       <button
         onClick={() => setIsOpen(true)}
-        className="bg-purple-500 text-white px-4 py-2 rounded"
+        className="bg-purple-500 hover:bg-purple-600 active:bg-purple-700 transition text-white px-4 py-2 rounded"
       >
         + Add Booking
       </button>

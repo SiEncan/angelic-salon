@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ChevronLeftIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon, ScissorsIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, BriefcaseIcon, ChartPieIcon, BellIcon, Bars3Icon, ChevronLeftIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon, ScissorsIcon } from "@heroicons/react/24/outline";
 import { useNavigate, Link, useLocation } from "react-router-dom"; // Import useLocation
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
@@ -71,16 +71,17 @@ const Bookings = () => {
     setFilteredBookings(filteredBookings);
   }, [bookings, selectedEmployee, selectedStatus, selectedDate]); // Hanya filtering jika filter berubah  
 
-  /////////////////////////////////////////////////////// SORT TABLE
+  /////////////////////////////////////////////////////// SORT TABLE date sekaligus time
   useEffect(() => {
     const sorted = [...filteredBookings].sort((a, b) => {
-      return sortOrder === "asc"
-        ? new Date(a.date) - new Date(b.date)
-        : new Date(b.date) - new Date(a.date);
+      const dateTimeA = new Date(`${a.date} ${a.time}`);
+      const dateTimeB = new Date(`${b.date} ${b.time}`);
+  
+      return sortOrder === "asc" ? dateTimeA - dateTimeB : dateTimeB - dateTimeA;
     });
-
+  
     setSortedBookings(sorted);
-  }, [filteredBookings, sortOrder]); // Jalankan ulang sorting jika filteredBookings atau sortOrder berubah
+  }, [filteredBookings, sortOrder]);   // Jalankan ulang sorting jika filteredBookings atau sortOrder berubah
 
   // Fungsi untuk mengubah urutan sorting
   const handleSortByDate = () => {
@@ -187,7 +188,7 @@ const Bookings = () => {
             { icon: ClipboardDocumentListIcon, label: "Bookings", path: "/admin-dashboard/bookings" },
             { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
             { icon: ScissorsIcon, label: "Manage Services", path: "/admin-dashboard/manage-services" },
-            { icon: DocumentIcon, label: "Documents", path: "/documents" },
+            { icon: BriefcaseIcon, label: "Manage Employee", path: "/admin-dashboard/manage-employee" },
             { icon: ChartPieIcon, label: "Reports", path: "/reports" }].map((item, index) => (
             <Link
               key={index}
@@ -250,7 +251,7 @@ const Bookings = () => {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-6">
           <div className="bg-white shadow-md rounded-lg p-4 min-w-[1400px]">
-            <h2 className="text-xl font-semibold mb-4">Booking - {monthNames}</h2>
+            <h2 className="text-xl font-bold mb-4">Booking - {monthNames}</h2>
             {/* Filter Dropdown */}
             <div className="mb-4 flex gap-4">
               {/* Filter by Employee */}
@@ -309,7 +310,7 @@ const Bookings = () => {
                 >
                 {/* <div className="overflow-x-auto"> */}
                 <table className="w-full min-w-[1400px] bg-white border border-gray-200 shadow-sm rounded-md">
-                  <thead>
+                  <thead className="bg-white">
                     <tr className="bg-gray-100 border-b">
                       <th className="p-2 text-left">Name</th>
                       <th className="p-2 text-left">Phone Number</th>
@@ -382,13 +383,13 @@ const Bookings = () => {
             <div className="mt-4 flex justify-between">
               <button
                 onClick={() => setCurrentPage(currentPage - 1)}
-                className="bg-pink-400 text-white px-3 py-2 rounded flex items-center gap-2"
+                className="bg-pink-400 hover:bg-pink-500 active:bg-pink-600 transition text-white px-3 py-2 rounded flex items-center gap-2"
                 >
                 <ChevronLeftIcon className="h-6 w-6" />Previous Month
               </button>
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
-                className="bg-pink-400 text-white px-3 py-2 rounded flex items-center gap-2"
+                className="bg-pink-400 hover:bg-pink-500 active:bg-pink-600 transition text-white px-3 py-2 rounded flex items-center gap-2"
                 >
                 Next Month <ChevronRightIcon className="h-6 w-6" />
               </button>

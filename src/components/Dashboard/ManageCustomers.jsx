@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon, BriefcaseIcon} from "@heroicons/react/24/outline";
 import { useNavigate, Link, useLocation } from "react-router-dom";  // Menggunakan useLocation untuk memeriksa route aktif
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
 import { doc, getDoc, getDocs, collection } from "firebase/firestore";
@@ -90,7 +90,7 @@ const ManageCustomers = () => {
             { icon: ClipboardDocumentListIcon, label: "Bookings", path: "/admin-dashboard/bookings" },
             { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
             { icon: ScissorsIcon, label: "Manage Services", path: "/admin-dashboard/manage-services" },
-            { icon: DocumentIcon, label: "Documents", path: "/documents" },
+            { icon: BriefcaseIcon, label: "Manage Employee", path: "/admin-dashboard/manage-employee" },
             { icon: ChartPieIcon, label: "Reports", path: "/reports" }].map((item, index) => (
             <Link
               key={index}

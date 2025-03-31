@@ -58,8 +58,8 @@ function Login() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="w-12 h-12 border-4 border-pink-500 border-dashed rounded-full animate-spin"></div>
+      <div className="flex justify-center bg-pink-400 items-center h-screen">
+        <div className="w-12 h-12 border-4 border-purple-600 border-dashed rounded-full animate-spin"></div>
       </div>
     );
   }

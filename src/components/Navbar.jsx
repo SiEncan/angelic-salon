@@ -22,7 +22,7 @@ function NavigationBar() {
     <Navbar expand="lg" bg="light" className="shadow-sm">
       <Container>
         <Navbar.Brand className="Brand" as={Link} to="/">
-          Angelic Beauty
+          Angelic Salon & Spa
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">

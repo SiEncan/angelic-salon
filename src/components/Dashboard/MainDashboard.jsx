@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
-import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, CalendarIcon, DocumentIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from "@heroicons/react/24/outline";
+import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, BriefcaseIcon } from "@heroicons/react/24/outline";
 import { useNavigate, Link, useLocation } from "react-router-dom"; // Import useLocation
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
 import { doc, getDoc, getDocs, collection, where, query } from "firebase/firestore";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau status autentikasi
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import dayjs from "dayjs";
 
-const AdminDashboard = () => {
+const MainDashboard = () => {
   const [loggedName, setLoggedName] = useState("");
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
@@ -184,7 +185,7 @@ const AdminDashboard = () => {
             { icon: ClipboardDocumentListIcon, label: "Bookings", path: "/admin-dashboard/bookings" },
             { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
             { icon: ScissorsIcon, label: "Manage Services", path: "/admin-dashboard/manage-services" },
-            { icon: DocumentIcon, label: "Documents", path: "/documents" },
+            { icon: BriefcaseIcon, label: "Manage Employee", path: "/admin-dashboard/manage-employee" },
             { icon: ChartPieIcon, label: "Reports", path: "/reports" }].map((item, index) => (
             <Link
               key={index}
@@ -378,4 +379,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default MainDashboard;
