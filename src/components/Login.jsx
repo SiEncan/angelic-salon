@@ -4,6 +4,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 
 import character from '../assets/images/LoginCharacter.png';
@@ -116,7 +117,7 @@ function Login() {
                 whileHover={{
                   background: 'linear-gradient(to right, #db2777,rgb(184, 64, 112))', // pink gradient lebih gelap
                 }}
-                transition={{ duration: 0.2 }} // Durasi transisi
+                transition={{ duration: 0.3 }} // Durasi transisi
                 >
                 LOGIN
               </motion.button>

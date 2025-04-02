@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, BriefcaseIcon } from "@heroicons/react/24/outline";
 import { useNavigate, Link, useLocation } from "react-router-dom"; // Import useLocation
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
-import { doc, getDoc, getDocs, collection, where, query } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, collection, where, query } from "firebase/firestore";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau status autentikasi
@@ -19,7 +19,7 @@ const MainDashboard = () => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const [currentMonth, setCurrentMonth] = useState(dayjs().format("MMMM YYYY"));
+  const [currentPage, setCurrentPage] = useState(dayjs().month());
   const [chartData, setChartData] = useState([]);
   
   const [customerCount, setCustomerCount] = useState([]);
@@ -32,30 +32,23 @@ const MainDashboard = () => {
   const [cancelledBookings, setCancelledBookings] = useState(0);
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        // Ambil awal dan akhir bulan
-        const firstDay = dayjs(currentMonth, "MMMM YYYY").startOf("month").format("YYYY-MM-DD");
-        const lastDay = dayjs(currentMonth, "MMMM YYYY").endOf("month").format("YYYY-MM-DD");
-
-        // Query hanya booking dalam bulan
-        const bookingsQuery = query(
-          collection(db, "bookings"),
-          where("date", ">=", firstDay),
-          where("date", "<=", lastDay)
-        );
-
-        const querySnapshot = await getDocs(bookingsQuery);
+    const monthStart = dayjs().month(currentPage).startOf("month").format("YYYY-MM-DD");
+    const monthEnd = dayjs().month(currentPage).endOf("month").format("YYYY-MM-DD");
+    
+    const unsubscribeBookings = onSnapshot(
+      query(
+        collection(db, "bookings"),
+        where("date", ">=", monthStart),
+        where("date", "<=", monthEnd)
+      ),
+      (querySnapshot) => {
         const bookings = querySnapshot.docs.map((doc) => doc.data());
-
-        // Generate array tanggal dalam bulan
+        
         const daysInMonth = Array.from(
-          { length: dayjs(currentMonth, "MMMM YYYY").daysInMonth() },
-          (_, i) =>
-            dayjs(currentMonth, "MMMM YYYY").startOf("month").add(i, "day").format("YYYY-MM-DD")
-        );        
-
-        // Inisialisasi data booking dengan 0
+          { length: dayjs().month(currentPage).daysInMonth() },
+          (_, i) => dayjs().month(currentPage).startOf("month").add(i, "day").format("YYYY-MM-DD")
+        );
+        
         const dayCounts = daysInMonth.reduce((acc, date) => ({ ...acc, [date]: { bookings: 0, revenue: 0 } }), {});
         let totalRevenueSum = 0;
         let confirmedRevenueSum = 0;
@@ -65,36 +58,36 @@ const MainDashboard = () => {
         let bookedBookingsCount = 0;
         let cancelledBookingsCount = 0;
 
-        // Hitung jumlah booking dan total revenue
+        console.log(bookings)
+        
         bookings.forEach((booking) => {
           const bookingDate = dayjs(booking.date).format("YYYY-MM-DD");
           if (dayCounts[bookingDate]) {
             dayCounts[bookingDate].bookings += 1;
-            if (booking.status != "Cancelled" && booking.status != "Completed") {
+            if (booking.status !== "Cancelled" && booking.status !== "Completed") {
               totalRevenueSum += booking.totalPrice || 0;
             }
-            if (booking.status == "Completed") {
+            if (booking.status === "Completed") {
               confirmedRevenueSum += booking.totalPrice || 0;
               completedBookingsCount += 1;
               dayCounts[bookingDate].revenue += booking.totalPrice || 0;
-            } else if (booking.status == "In Progress") {
+            } else if (booking.status === "In Progress") {
               inProgressBookingsCount += 1;
-            } else if (booking.status == "Booked") {
+            } else if (booking.status === "Booked") {
               bookedBookingsCount += 1;
-            } else if (booking.status == "Cancelled") {
+            } else if (booking.status === "Cancelled") {
               cancelledBookingsCount += 1;
             }
             totalBookingsCount += 1;
           }
         });
-
-        // Format data untuk grafik
+        
         const formattedData = daysInMonth.map((date) => ({
           date,
           bookings: dayCounts[date].bookings,
           dailyRevenue: dayCounts[date].revenue,
         }));
-
+        
         setChartData(formattedData);
         setConfirmedRevenue(confirmedRevenueSum.toLocaleString("id-ID"));
         setTotalRevenue(totalRevenueSum.toLocaleString("id-ID"));
@@ -103,38 +96,18 @@ const MainDashboard = () => {
         setInProgressBookings(inProgressBookingsCount);
         setCompletedBookings(completedBookingsCount);
         setCancelledBookings(cancelledBookingsCount);
-      } catch (error) {
-        console.error("Error fetching bookings: ", error);
-      }
+      },
+      (error) => console.error("Error fetching bookings: ", error)
+    );
+    
+    return () => {
+      unsubscribeBookings();
     };
+  }, [currentPage]);
 
-    const fetchCustomers = async () => {
-      try {
-        // Query hanya untuk user dengan role "customer"
-        const customersQuery = query(
-          collection(db, "users"),
-          where("role", "==", "customer")
-        );
+  const monthNames = dayjs().month(currentPage).format("MMMM YYYY");
 
-        const querySnapshot = await getDocs(customersQuery);
-        setCustomerCount(querySnapshot.size); // Menghitung jumlah dokumen dengan role "customer"
-      } catch (error) {
-        console.error("Error fetching customers: ", error);
-      }
-    };
-
-    fetchCustomers();
-    fetchBookings();
-  }, [currentMonth]);
-
-  const handlePrevMonth = () => {
-    setCurrentMonth(dayjs(currentMonth, "MMMM YYYY").subtract(1, "month").format("MMMM YYYY"));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(dayjs(currentMonth, "MMMM YYYY").add(1, "month").format("MMMM YYYY"));
-  };
-
+  /////////////////////////////////////////// navbar ///////////////////////////
   useEffect(() => {
     // Memantau perubahan status autentikasi
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -148,6 +121,7 @@ const MainDashboard = () => {
     // Hapus listener ketika komponen dibersihkan
     return () => unsubscribe();
   }, []);
+
 
   useEffect(() => {
     // Ambil nama pengguna setelah userId tersedia
@@ -254,13 +228,13 @@ const MainDashboard = () => {
     
               {/* Tombol Navigasi Bulan (Tetap di dalam div) */}
               <ChevronDoubleLeftIcon
-                onClick={handlePrevMonth}
+                onClick={() => setCurrentPage(currentPage - 1)}
                 className="absolute left-0 top-0 h-full w-8 text-white bg-pink-500 bg-opacity-30 hover:bg-opacity-70 transition duration-300 flex items-center justify-center rounded-l-lg"
               >
               </ChevronDoubleLeftIcon>
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={currentMonth}
+                  key={currentPage}
                   className="flex-1 py-4 px-12"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "100%" }}
@@ -271,7 +245,7 @@ const MainDashboard = () => {
                   <div className="bg-white shadow-[0_2px_30px_rgba(0,0,0,0.3)] rounded-lg p-4 mb-6 overflow-x-auto">
                     <div className="w-[600px] md:w-full">
                     <h3 className="text-lg font-medium text-gray-700 mb-4">
-                      Booking Statistics ({currentMonth === dayjs().format("MMMM YYYY") ? "This Month" : currentMonth})
+                      Booking Statistics ({monthNames === dayjs().format("MMMM YYYY") ? "This Month" : monthNames})
                     </h3>
                     <ResponsiveContainer width="100%" height={300}>
                       <LineChart data={chartData}>
@@ -339,7 +313,7 @@ const MainDashboard = () => {
                 </motion.div>
               </AnimatePresence>
               <ChevronDoubleRightIcon
-                onClick={handleNextMonth}
+                onClick={() => setCurrentPage(currentPage + 1)}
                 className="absolute right-0 top-0 h-full w-8 text-white bg-pink-500 bg-opacity-30 hover:bg-opacity-70 transition duration-300 flex items-center justify-center rounded-r-lg"
                 >
               </ChevronDoubleRightIcon>

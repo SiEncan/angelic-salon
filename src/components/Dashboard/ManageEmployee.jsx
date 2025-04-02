@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon, ChevronLeftIcon, ChevronRightIcon, BriefcaseIcon } from "@heroicons/react/24/outline";
 import { useNavigate, Link, useLocation } from "react-router-dom"; // Import useLocation
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
-import { doc, getDoc, getDocs, collection, where, query } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, collection, where, query } from "firebase/firestore";
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau status autentikasi
@@ -36,74 +36,72 @@ const ManageEmployee = () => {
     Cancelled: "bg-red-500 text-white",
   };
 
-  const [currentMonth, setCurrentMonth] = useState(dayjs().format("MMMM YYYY"));
+  const [currentPage, setCurrentPage] = useState(dayjs().month());
   const [employeeData, setEmployeeData] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const daysInMonth = Array.from(
-        { length: dayjs(currentMonth, "MMMM YYYY").daysInMonth() },
-        (_, i) =>
-          dayjs(currentMonth, "MMMM YYYY").startOf("month").add(i, "day").format("YYYY-MM-DD")
-      );
+    const monthStart = dayjs().month(currentPage).startOf("month").format("YYYY-MM-DD");
+    const monthEnd = dayjs().month(currentPage).endOf("month").format("YYYY-MM-DD");
 
-      const usersQuery = query(collection(db, "users"), where("role", "==", "employee"));
-      const usersSnapshot = await getDocs(usersQuery);
-      const employees = usersSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().fullName,
-      }));
-      
-      const employeeStats = {};
-      
-      employees.forEach((employee) => {
-        employeeStats[employee.name] = {};
-        daysInMonth.forEach((date) => {
-          employeeStats[employee.name][date] = {
-            Completed: 0,
-            Booked: 0,
-            "In Progress": 0,
-            Cancelled: 0,
-          };
+    const daysInMonth = Array.from(
+        { length: dayjs().month(currentPage).daysInMonth() },
+        (_, i) => dayjs().month(currentPage).startOf("month").add(i, "day").format("YYYY-MM-DD")
+    );
+
+    const usersQuery = query(collection(db, "users"), where("role", "==", "employee"));
+    
+    const unsubscribeUsers = onSnapshot(usersQuery, (usersSnapshot) => {
+        const employees = usersSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            name: doc.data().fullName,
+        }));
+
+        const employeeStats = {};
+        employees.forEach((employee) => {
+            employeeStats[employee.name] = {};
+            daysInMonth.forEach((date) => {
+                employeeStats[employee.name][date] = {
+                    Completed: 0,
+                    Booked: 0,
+                    "In Progress": 0,
+                    Cancelled: 0,
+                };
+            });
         });
-      }); 
-      
-      // Ambil daftar bookings dalam bulan
-      const firstDay = dayjs(currentMonth, "MMMM YYYY").startOf("month").format("YYYY-MM-DD");
-      const lastDay = dayjs(currentMonth, "MMMM YYYY").endOf("month").format("YYYY-MM-DD");
 
-      const bookingsQuery = query(
-        collection(db, "bookings"),
-        where("date", ">=", firstDay),
-        where("date", "<=", lastDay)
-      );
-      
-      const querySnapshot = await getDocs(bookingsQuery);
-      const bookings = querySnapshot.docs.map((doc) => doc.data());
-      
-      // Masukkan data dari bookings ke dalam employeeStats
-      bookings.forEach((booking) => {
-        const { employeeName, date, status } = booking;
-        const bookingDate = dayjs(date).format("YYYY-MM-DD");
-      
-        if (employeeStats[employeeName][bookingDate][status] !== undefined) {
-          employeeStats[employeeName][bookingDate][status] += 1;
-        }
-      });
+        const bookingsQuery = query(
+            collection(db, "bookings"),
+            where("date", ">=", monthStart),
+            where("date", "<=", monthEnd)
+        );
+        
+        const unsubscribeBookings = onSnapshot(bookingsQuery, (querySnapshot) => {
+            const bookings = querySnapshot.docs.map((doc) => doc.data());
 
-      setEmployeeData(employeeStats);
-    };
+            // Memasukkan data dari bookings ke dalam employeeStats
+            bookings.forEach((booking) => {
+                const { employeeName, date, status } = booking;
+                const bookingDate = dayjs(date).isValid()
+                    ? dayjs(date).format("YYYY-MM-DD")
+                    : dayjs(date.toDate()).format("YYYY-MM-DD");
+                
+                if (employeeStats[employeeName] && employeeStats[employeeName][bookingDate]) {
+                    employeeStats[employeeName][bookingDate][status] += 1;
+                }
+            });
+            
+            setEmployeeData(employeeStats);
+        });
+        
+        return () => unsubscribeBookings();
+    });
+    
+    return () => unsubscribeUsers();
+  }, [currentPage]);
 
-    fetchData();
-  }, [currentMonth]);
+  const monthNames = dayjs().month(currentPage).format("MMMM YYYY");
 
-  const handlePrevMonth = () => {
-    setCurrentMonth(dayjs(currentMonth, "MMMM YYYY").subtract(1, "month").format("MMMM YYYY"));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(dayjs(currentMonth, "MMMM YYYY").add(1, "month").format("MMMM YYYY"));
-  };
+  ///////////////////////////// navbar
 
   useEffect(() => {
     // Memantau perubahan status autentikasi
@@ -220,7 +218,7 @@ const ManageEmployee = () => {
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-6">
           <div className="bg-white shadow-md rounded-lg p-4 min-w-[500px]">
-            <h2 className="text-xl font-bold mb-4">Employee Summary - {currentMonth}</h2>
+            <h2 className="text-xl font-bold mb-4">Employee Summary - {monthNames}</h2>
             {/* Tombol Filter Status */}
             <h1 className="text-lg">Status Filter</h1>
             <div className="mb-4 flex gap-2">
@@ -238,7 +236,7 @@ const ManageEmployee = () => {
             </div>
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentMonth}
+                key={currentPage}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "100%" }}
                 exit={{ opacity: 0, height: 0 }}
@@ -301,7 +299,7 @@ const ManageEmployee = () => {
             {/* Pagination */}
             <div className="mt-4 flex justify-between">
               <button
-                onClick={handlePrevMonth}
+                onClick={() => setCurrentPage(currentPage - 1)}
                 className="bg-pink-400 text-white px-3 py-2 rounded flex items-center gap-2 
                           hover:bg-pink-500 active:bg-pink-600 transition"
               >
@@ -309,7 +307,7 @@ const ManageEmployee = () => {
               </button>
 
               <button
-                onClick={handleNextMonth}
+                onClick={() => setCurrentPage(currentPage + 1)}
                 className="bg-pink-400 text-white px-3 py-2 rounded flex items-center gap-2 
                           hover:bg-pink-500 active:bg-pink-600 transition"
               >
