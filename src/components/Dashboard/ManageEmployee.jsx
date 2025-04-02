@@ -249,7 +249,7 @@ const ManageEmployee = () => {
                   <table className="min-w-full border border-gray-300">
                     <thead>
                       <tr className="bg-gray-200">
-                        <th className="px-4 py-2 border sticky left-0 bg-gray-200 z-10">Nama Karyawan</th>
+                        <th className="px-4 py-2 border sticky left-0 bg-gray-200 z-10">Name\Date</th>
                         {Object.keys(employeeData).length > 0 &&
                           Object.keys(employeeData[Object.keys(employeeData)[0]]).map((date, i) => (
                             <th key={i} className="px-4 py-2 border">{dayjs(date).format("D")}</th>

@@ -44,7 +44,7 @@ function Login() {
       const role = userDoc.exists() ? userDoc.data().role : "customer";
 
       // Redirect sesuai role
-      if (role === "admin") {
+      if (role === "admin" || role === "employee") {
         navigate("/admin-dashboard");
       } else {
         navigate("/");
@@ -58,8 +58,8 @@ function Login() {
 
   if (loading) {
     return (
-      <div className="flex justify-center bg-pink-400 items-center h-screen">
-        <div className="w-12 h-12 border-4 border-purple-600 border-dashed rounded-full animate-spin"></div>
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-pink-500"></div>
       </div>
     );
   }

@@ -6,12 +6,17 @@ import { collection, getDocs, query, where, addDoc, Timestamp } from "firebase/f
 import { db } from "../../firebase";
 import dayjs from "dayjs";
 
+import FeedbackModal from "../FeedBackModal";
 import EmployeeSelection from "./EmployeeSelection";
 
 const AddBookingButton = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isWarning, setIsWarning] = useState(false)
   const [isSearching, setIsSearching] = useState(false);
+
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackModalType, setFeedbackModalType] = useState("");  // "success" or "failed"
+  const [feedbackModalTitle, setFeedbackModalTitle] = useState("");
+  const [feedbackModalDescription, setFeedbackModalDescription] = useState("");
 
   const [nameInput, setNameInput] = useState("");
   const [phone, setPhone] = useState("");
@@ -70,7 +75,10 @@ const AddBookingButton = () => {
 
   const handleSaveBooking = async () => {
     if ( !date || !time || services.length === 0 || !selectedEmployee) {
-      setIsWarning(true); // Tampilkan pop-up alert
+      setFeedbackModalType("failed");
+      setFeedbackModalTitle("All fields are required");
+      setFeedbackModalDescription("Oops! It looks like you missed some required fields.");      
+      setIsFeedbackModalOpen(true);
       return;
     }
   
@@ -90,21 +98,19 @@ const AddBookingButton = () => {
   
       // Simpan ke Firestore
       await addDoc(collection(db, "bookings"), bookingData);
+
+      setFeedbackModalType("success");
+      setFeedbackModalTitle("Booking successfully saved!");
+      setFeedbackModalDescription("The appointment is now scheduled for the customer.");      
+      setIsFeedbackModalOpen(true);
   
-      alert("Booking successfully saved!");
       setIsOpen(false); // Tutup modal setelah berhasil
-      setNameInput("");
-      setPhone("");
-      setDate("");
-      setTime("");
-      setEndTime("");
-      setTotalPrice(0);
-      setServices([]);
-      setSelectedUser(null);
-      setSelectedEmployee(null);
     } catch (error) {
       console.error("Error saving booking:", error);
-      alert("Failed to save booking. Please try again.");
+      setFeedbackModalType("failed");
+      setFeedbackModalTitle("Failed to save booking.");
+      setFeedbackModalDescription("Oops! Something went wrong while saving the booking. Please try again later.");      
+      setIsFeedbackModalOpen(true);
     }
   };  
 
@@ -222,175 +228,177 @@ const AddBookingButton = () => {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
               className="fixed inset-0 flex justify-center items-center"
-            >
-              <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
-                <h2 className="text-xl font-bold mb-4">Add Booking</h2>
+              >
+                <div className="bg-white p-6 rounded-lg shadow-lg w-96 relative">
+                  <h2 className="text-xl font-bold mb-4">Add Booking</h2>
 
-                {/* Input Nama dengan Auto-Suggest */}
-                <div className="relative w-full">
-                  <input
-                  type="text"
-                  placeholder="Type name..."
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                      handleSearchCustomer(); // Jalankan pencarian saat Enter ditekan
-                      }
-                  }}
-                  className="p-2 w-full pr-12 border rounded shadow-sm outline-none"
-                  />
-                  <button
-                  onClick={handleSearchCustomer}
-                  
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
-                  >
-                  <MagnifyingGlassIcon className="h-6 w-4" />
-                  </button>
-
-                  {/* Floating Daftar Sugesti */}
-                  {suggestions.length > 0 ? (
-                      <ul className="absolute left-0 top-full mt-1 w-full bg-white border shadow-lg rounded max-h-40 overflow-auto z-50 p-0">
-                        {suggestions.map((user) => (
-                          <li
-                            key={user.id}
-                            onClick={() => handleSelectUser(user)}
-                            className="p-2 cursor-pointer hover:bg-gray-200"
-                            >
-                            {user.fullName}
-                          </li>
-                        ))}
-                      </ul>
-                      ) : (
-                      isSearching && suggestions.length === 0 && (
-                        <div className="absolute left-0 top-full mt-1 w-full bg-white border shadow-lg rounded p-2 text-gray-500">
-                        No Results...
-                        </div>
-                      )
-                  )}
-                </div>
-
-                {/* Input Nomor HP */}
-                <input
-                  type="text"
-                  placeholder="Phone Number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="border p-2 w-full mt-2 rounded shadow-sm"
-                />
-
-                {/* Input Date */}
-                <input
-                  type="date"
-                  value={date}
-                  onChange={handleDateChange}
-                  className="border p-2 w-full mt-2 rounded shadow-sm"
-                />
-
-                {/* Input Time */}
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => {
-                    setSelectedEmployee(null);
-                    setTime(e.target.value)} // Tambahkan handler untuk time
-                  } 
-                  className="border p-2 w-full mt-2 rounded shadow-sm"
-                />
-
-                {/* Pilihan Services */}
-                
-                <div className="mt-2">
-                <h3 className="text-xl font-semibold">Services:</h3>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {serviceOptions.map((service) => (
-                  <button
-                      key={service.name}
-                      onClick={() => handleServiceChange(service.name)}
-                      className={`px-3 w-full text-left py-1 border rounded ${
-                      services.includes(service.name) ? "bg-blue-500 text-white" : "bg-gray-200"
-                      }`}
-                      style={{height: '40px' }}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span>{service.name}</span>
-                      <span>Rp{Number(service.price).toLocaleString('id-ID')}</span>
-                    </div>
-                  </button>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-2">
-                <h3 className="text-lg font-semibold mb-0">Total Price:</h3>
-                <p className="text-md font-semibold text-grey-200">
-                  Rp{Number(totalPrice).toLocaleString('id-ID')}
-                </p>
-              </div>
-
-              {/* Employee Selection */}
-              {date && time && services.length > 0 && (
-              <EmployeeSelection 
-                  date={date} 
-                  services={services} 
-                  time={time} 
-                  existingBookings={existingBookings}
-                  endTime={endTime} 
-                  selectedEmployee={selectedEmployee}
-                  setSelectedEmployee={setSelectedEmployee}
-              />
-              )}
-
-              {/* Pop-up Alert */}
-              {isWarning && (
-                <div
-                  className="fixed z-50 flex items-center justify-center"
-                  onClick={() => setIsWarning(false)}
-                >
-                  <div
-                      className={`fixed top-5 right-5 bg-red-500 text-white px-4 py-2 rounded shadow-md transition-all duration-3`}
-                      style={{ zIndex: 9999 }}
-                    >
-                    <p className="text-center font-semibold">Please fill all required fields!</p>
+                  {/* Input Nama dengan Auto-Suggest */}
+                  <div className="relative w-full">
+                    <input
+                    type="text"
+                    placeholder="Type name..."
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                        handleSearchCustomer(); // Jalankan pencarian saat Enter ditekan
+                        }
+                    }}
+                    className="p-2 w-full pr-12 border rounded shadow-sm outline-none"
+                    />
                     <button
-                      className="px-4 py-2 bg-red-600 rounded hover:bg-red-800"
-                      onClick={() => setIsWarning(false)}
+                    onClick={handleSearchCustomer}
+                    
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700"
                     >
-                      Close
+                    <MagnifyingGlassIcon className="h-6 w-4" />
                     </button>
+
+                    {/* Floating Daftar Sugesti */}
+                    {suggestions.length > 0 ? (
+                        <ul className="absolute left-0 top-full mt-1 w-full bg-white border shadow-lg rounded max-h-40 overflow-auto z-50 p-0">
+                          {suggestions.map((user) => (
+                            <li
+                              key={user.id}
+                              onClick={() => handleSelectUser(user)}
+                              className="p-2 cursor-pointer hover:bg-gray-200"
+                              >
+                              {user.fullName}
+                            </li>
+                          ))}
+                        </ul>
+                        ) : (
+                        isSearching && suggestions.length === 0 && (
+                          <div className="absolute left-0 top-full mt-1 w-full bg-white border shadow-lg rounded p-2 text-gray-500">
+                          No Results...
+                          </div>
+                        )
+                    )}
+                  </div>
+
+                  {/* Input Nomor HP */}
+                  <input
+                    type="text"
+                    placeholder="Phone Number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="border p-2 w-full mt-2 rounded shadow-sm"
+                  />
+
+                  {/* Input Date */}
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={handleDateChange}
+                    className="border p-2 w-full mt-2 rounded shadow-sm"
+                  />
+
+                  {/* Input Time */}
+                  <input
+                    type="time"
+                    value={time}
+                    onChange={(e) => {
+                      setSelectedEmployee(null);
+                      setTime(e.target.value)} // Tambahkan handler untuk time
+                    } 
+                    className="border p-2 w-full mt-2 rounded shadow-sm"
+                  />
+
+                  {/* Pilihan Services */}
+                  
+                  <div className="mt-2">
+                  <h3 className="text-xl font-semibold">Services:</h3>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {serviceOptions.map((service) => (
+                    <button
+                        key={service.name}
+                        onClick={() => handleServiceChange(service.name)}
+                        className={`px-3 w-full text-left py-1 border rounded ${
+                        services.includes(service.name) ? "bg-blue-500 text-white" : "bg-gray-200"
+                        }`}
+                        style={{height: '40px' }}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span>{service.name}</span>
+                        <span>Rp{Number(service.price).toLocaleString('id-ID')}</span>
+                      </div>
+                    </button>
+                    ))}
                   </div>
                 </div>
-              )}
+                <div className="mt-2">
+                  <h3 className="text-lg font-semibold mb-0">Total Price:</h3>
+                  <p className="text-md font-semibold text-grey-200">
+                    Rp{Number(totalPrice).toLocaleString('id-ID')}
+                  </p>
+                </div>
 
-              {/* Tombol Simpan */}
-              <div className="flex justify-between mt-4">
-                <button
-                  onClick={() => {setIsOpen(false); setNameInput("");
-                    setPhone("");
-                    setDate("");
-                    setTime("");
-                    setEndTime("");
-                    setServices([]);
-                    setSelectedUser(null);
-                    setSelectedEmployee(null);
-                    setTotalPrice(0);
+                {/* Employee Selection */}
+                {date && time && services.length > 0 && (
+                <EmployeeSelection 
+                    date={date} 
+                    services={services} 
+                    time={time} 
+                    existingBookings={existingBookings}
+                    endTime={endTime} 
+                    selectedEmployee={selectedEmployee}
+                    setSelectedEmployee={setSelectedEmployee}
+                />
+                )}
+
+                {/* Tombol Simpan */}
+                <div className="flex justify-between mt-4">
+                  <button
+                    onClick={() => {
+                      setIsOpen(false); 
+                      setNameInput("");
+                      setPhone("");
+                      setDate("");
+                      setTime("");
+                      setEndTime("");
+                      setServices([]);
+                      setSelectedUser(null);
+                      setSelectedEmployee(null);
+                      setTotalPrice(0);
+                      }
                     }
-                  }
-                  className="bg-gray-500 text-white px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleSaveBooking} 
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
-                >
-                  Save Booking
-                </button>
+                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleSaveBooking} 
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                  >
+                    Save Booking
+                  </button>
+                </div>
+
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
           </>
         )}
       </AnimatePresence>
+      <FeedbackModal 
+        type={feedbackModalType} 
+        title={feedbackModalTitle} 
+        description={feedbackModalDescription} 
+        isOpen={isFeedbackModalOpen} 
+        setIsOpen={() => {
+          setIsFeedbackModalOpen(false);
+          if (feedbackModalType == 'success') {
+            setNameInput("");
+            setPhone("");
+            setDate("");
+            setTime("");
+            setEndTime("");
+            setServices([]);
+            setSelectedUser(null);
+            setSelectedEmployee(null);
+            setTotalPrice(0);
+          }
+        }} 
+      />
     </>
   );
 };

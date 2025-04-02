@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, db } from './firebase';  // Sesuaikan dengan konfigurasi firebase Anda
+import { auth, db } from './firebase';  
 import { doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -10,35 +10,59 @@ const ProtectedRoute = ({ element }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
+    let retryTimeout;
 
-        if (userDocSnap.exists()) {
-          const role = userDocSnap.data().role;
-          if (role === 'admin' || role === 'employee') {
-            setIsAdmin(true);
-          } else {
-            navigate('/');  // Jika bukan admin, redirect ke halaman homepage
+    const checkUserRole = async (user) => {
+      try {
+        if (user) {
+          const userDocRef = doc(db, "users", user.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          
+          if (userDocSnap.exists()) {
+            const role = userDocSnap.data().role;
+            if (role === 'admin' || role === 'employee') {
+              setIsAdmin(true);
+            } else {
+              navigate('/');
+            }
           }
+        } else {
+          navigate('/login');
         }
-      } else {
-        navigate('/login');  // Jika belum login, arahkan ke halaman login
+        setLoading(false);
+      } catch (error) {
+        console.log(error)
+        console.log("Error fetching user data, retrying in 5s...");
+        retryTimeout = setTimeout(() => checkUserRole(user), 5000);
       }
-      setLoading(false);
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      checkUserRole(user);
     });
 
-    return () => unsubscribe();
-  }, [navigate]);
+    window.addEventListener("online", () => {
+      if (loading) {
+        onAuthStateChanged(auth, (user) => {
+          checkUserRole(user);
+        });
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      clearTimeout(retryTimeout);
+      window.removeEventListener("online", () => {});
+    };
+  }, [navigate, loading]);
 
   if (loading) {
     return (
-      <div className="flex justify-center bg-pink-400 items-center h-screen">
-        <div className="w-12 h-12 border-4 border-purple-600 border-dashed rounded-full animate-spin"></div>
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-pink-500"></div>
       </div>
     );
-  }  
+  }
 
   return isAdmin ? element : null;
 };

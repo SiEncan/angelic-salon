@@ -9,6 +9,8 @@ import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau sta
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import dayjs from "dayjs";
 
+import angelicLogo from '../../assets/images/AngelicSalon.jpg';
+
 const MainDashboard = () => {
   const [loggedName, setLoggedName] = useState("");
   const [userId, setUserId] = useState(null);
@@ -175,7 +177,7 @@ const MainDashboard = () => {
       >
         <div className="flex items-center justify-center h-20">
           <img
-            src="src/assets/images/AngelicSalon.jpg"
+            src={angelicLogo}
             alt="Logo"
             className="h-16 w-16"
           />

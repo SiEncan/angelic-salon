@@ -5,7 +5,7 @@ const cors = require('cors');  // Import CORS
 const path = require('path');  // Tambahkan path untuk menentukan lokasi file kredensial
 
 // Ganti dengan path yang sesuai di file kredensial Firebase yang Anda unduh
-const serviceAccount = path.join(__dirname, 'salon-booking-b86c9-firebase-adminsdk-fbsvc-b55ba5048b.json');
+const serviceAccount = path.join(__dirname, 'salon-booking-b86c9-firebase-adminsdk-fbsvc-d899467b63.json');
 
 // Inisialisasi Firebase Admin SDK dengan kredensial
 admin.initializeApp({
@@ -17,12 +17,16 @@ const port = 5000;
 
 // Menggunakan middleware CORS untuk mengizinkan request dari origin tertentu
 app.use(cors({
-  origin: 'http://localhost:5173', // Ganti dengan URL frontend Anda
+  origin: '*', // Mengizinkan semua origin
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type']
 }));
 
 app.use(bodyParser.json());
+
+app.get("/", (req, res) => {
+  res.status(200).send("Server is running...");
+});
 
 // API untuk membuat customer
 app.post('/createCustomer', async (req, res) => {
@@ -55,8 +59,7 @@ app.post('/createCustomer', async (req, res) => {
     // Kirimkan UID ke frontend setelah berhasil
     res.status(200).send({ message: 'Customer created successfully', uid: userRecord.uid });
   } catch (error) {
-    console.error('Error creating customer:', error);
-    res.status(500).send({ message: 'Error creating customer', error: error.message });
+    res.status(500).send({ message: 'Error Registering Customer', error: error.errorInfo.message });
   }
 });
 

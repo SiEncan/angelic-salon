@@ -1,39 +1,25 @@
 import { useState, useEffect } from "react";
 import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, BriefcaseIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon } from "@heroicons/react/24/outline";
-import { CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate, Link } from "react-router-dom"; // Import useLocation
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
 import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau status autentikasi
 import angelicLogo from '../../assets/images/AngelicSalon.jpg';
 
-const SuccessModal = ({ name, isOpen, setIsOpen }) => {
+import FeedbackModal from "../FeedBackModal";
+
+const LoadingModal = ({ isOpen }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-2xl shadow-lg p-6 w-96 text-center relative">
-        <button
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-          onClick={() => setIsOpen(false)}
-        >
-          ✕
-        </button>
-        <div className="flex justify-center">
-          <div className="bg-green-100 p-3 rounded-full">
-            <CheckCircle className="text-green-500" size={32} />
-          </div>
+        <h2 className="text-xl font-semibold">Loading...</h2>
+        <p className="text-gray-500 mt-2">Please wait while we register the customer.</p>
+        <div className="mt-4 flex justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-pink-500"></div>
         </div>
-        <h2 className="text-xl font-semibold mt-4">Account Created Successfully</h2>
-        <p className="text-gray-500 mt-2">
-          User <strong>{name}</strong> has been added to the Customer List
-        </p>
-        <button
-          className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg w-full"
-          onClick={() => setIsOpen(false)}
-        >
-          Continue
-        </button>
       </div>
     </div>
   );
@@ -58,7 +44,13 @@ const AddCustomer = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackModalType, setFeedbackModalType] = useState("");  // "success" or "failed"
+  const [feedbackModalTitle, setFeedbackModalTitle] = useState("");
+  const [feedbackModalDescription, setFeedbackModalDescription] = useState("");
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const resetForm = () => {
@@ -76,17 +68,25 @@ const AddCustomer = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-
+  
     if (!firstName || !lastName || !email || !password || !confirmPassword || !phone || !address || !city || !province || !zipCode) {
-      alert("All fields are required");
+      setFeedbackModalType("failed");
+      setFeedbackModalTitle("All fields are required");
+      setFeedbackModalDescription("Oops! It looks like you missed some required fields. Please fill them in.");      
+      setIsFeedbackModalOpen(true);
       return;
     }
     
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      setFeedbackModalType("failed");
+      setFeedbackModalTitle("Passwords do not match");
+      setFeedbackModalDescription("Oops! The passwords you entered do not match. Please try again.");
+      setIsFeedbackModalOpen(true);
       return;
     }
-
+  
+    setIsLoading(true); // Tampilkan modal loading
+  
     try {
       const response = await fetch("http://localhost:5000/createCustomer", {
         method: "POST",
@@ -105,16 +105,28 @@ const AddCustomer = () => {
           zipCode,
         }),
       });
-
+  
       if (response.ok) {
-        setIsModalOpen(true);
+        setIsLoading(false);
+        setFeedbackModalType("success");
+        setFeedbackModalTitle('Account Registered Successfully')
+        setFeedbackModalDescription(`User ${firstName} ${lastName} has been added to the Customer List`);
+        setIsFeedbackModalOpen(true);
       } else {
+        setIsLoading(false);
         const errorData = await response.json();
-        alert(`Error registering customer: ${errorData.message}`);
+        setFeedbackModalType("failed");
+        setFeedbackModalTitle(errorData.message);
+        setFeedbackModalDescription(errorData.error);
+        setIsFeedbackModalOpen(true);
       }
     } catch (error) {
       console.error("Error registering user:", error);
-      alert("Error registering user");
+      setFeedbackModalType("failed");
+      setFeedbackModalTitle("Error registering customer");
+      setFeedbackModalDescription(error.message);
+      setIsLoading(false);
+      setIsFeedbackModalOpen(true);
     }
   };
 
@@ -293,10 +305,17 @@ const AddCustomer = () => {
             </div>
           </div>
         </main>
-        <SuccessModal name={`${firstName} ${lastName}`} isOpen={isModalOpen} setIsOpen={() => {
-          setIsModalOpen(false);
-          resetForm();
-        }} />
+        <LoadingModal isOpen={isLoading} />
+        <FeedbackModal 
+          type={feedbackModalType} 
+          title={feedbackModalTitle} 
+          description={feedbackModalDescription} 
+          isOpen={isFeedbackModalOpen} 
+          setIsOpen={() => {
+            setIsFeedbackModalOpen(false);
+            if (feedbackModalType == 'success') resetForm();
+          }} 
+        />
       </div>
     </div>
   );
