@@ -113,7 +113,7 @@ const ManageServices = () => {
             <Link
               key={index}
               to={item.path}
-              className={`flex items-center px-2 py-2 text-sm font-medium text-white hover:text-white rounded-md no-underline 
+              className={`flex items-center px-2 py-2 text-sm transition duration-150 font-medium text-white hover:text-white rounded-md no-underline 
                 ${location.pathname === item.path ? 'bg-pink-600' : 'hover:bg-pink-500'}`}
             >
               <item.icon className="h-5 w-5 mr-3" />
@@ -169,7 +169,7 @@ const ManageServices = () => {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 bg-gradient-to-r from-purple-200 to-pink-200">
           <div className="mx-auto overflow-x-auto p-6 bg-gray-100 rounded-lg shadow-md">
             {/* <h2 className="text-3xl font-bold mb-6 text-gray-700">Manage Services</h2> */}
             <button

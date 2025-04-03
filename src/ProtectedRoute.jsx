@@ -58,7 +58,7 @@ const ProtectedRoute = ({ element }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center h-screen bg-gradient-to-r from-blue-200 to-pink-300">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-pink-500"></div>
       </div>
     );

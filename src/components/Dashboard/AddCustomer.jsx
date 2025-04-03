@@ -88,7 +88,7 @@ const AddCustomer = () => {
     setIsLoading(true); // Tampilkan modal loading
   
     try {
-      const response = await fetch("http://localhost:5000/createCustomer", {
+      const response = await fetch("https://backend-angelic-salon.onrender.com/createCustomer", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -179,8 +179,10 @@ const AddCustomer = () => {
             { icon: ChartPieIcon, label: "Reports", path: "/reports" }].map((item, index) => (
             <Link
               key={index}
+              
               to={item.path}
-              className={`flex items-center px-2 py-2 text-sm font-medium text-white hover:text-white rounded-md no-underline ${'/admin-dashboard/manage-customers' === item.path ? 'bg-pink-600' : 'hover:bg-pink-500'}`}
+              className={`flex items-center px-2 py-2 text-sm transition duration-150 font-medium text-white hover:text-white rounded-md no-underline 
+                ${'/admin-dashboard/manage-customers' === item.path ? 'bg-pink-600' : 'hover:bg-pink-500'}`}
             >
               <item.icon className="h-5 w-5 mr-3" />
               {item.label}

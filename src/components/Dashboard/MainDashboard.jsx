@@ -148,7 +148,7 @@ const MainDashboard = () => {
         className={`bg-pink-400 text-white w-64 fixed inset-y-0 left-0 top-0 transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 transition-transform duration-200 ease-in-out z-20`}
-      >
+       >
         <div className="flex items-center justify-center h-20">
           <img
             src={angelicLogo}
@@ -166,7 +166,7 @@ const MainDashboard = () => {
             <Link
               key={index}
               to={item.path}
-              className={`flex items-center px-2 py-2 text-sm font-medium text-white hover:text-white rounded-md no-underline 
+              className={`flex items-center px-2 py-2 text-sm transition duration-150 font-medium text-white hover:text-white rounded-md no-underline 
                 ${location.pathname === item.path ? 'bg-pink-600' : 'hover:bg-pink-500'}`}
             >
               <item.icon className="h-5 w-5 mr-3" />
@@ -222,7 +222,7 @@ const MainDashboard = () => {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 bg-gradient-to-r from-purple-200 to-pink-200">
           <div className="bg-white shadow-md min-w-[750px] md:w-full rounded-lg overflow-hidden">
             <div className="relative flex items-center">
     
@@ -259,7 +259,7 @@ const MainDashboard = () => {
                           }}
                           labelFormatter={(label) => `${dayjs(label).format("DD MMM YYYY")}`}
                         />
-                        <Line type="linear" dataKey="bookings" stroke="#3B82F6" dot={{ r: 2 }} strokeWidth={2.5} />
+                        <Line type="monotone" dataKey="bookings" stroke="#3B82F6" dot={{ r: 2 }} strokeWidth={2.5} />
                       </LineChart>
                     </ResponsiveContainer>
                     </div>

@@ -64,7 +64,7 @@ function Login() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center h-screen bg-gradient-to-r from-blue-200 to-pink-300">
         <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-pink-500"></div>
       </div>
     );
@@ -76,7 +76,7 @@ function Login() {
         {/* Bagian kiri - Form Login */}
         <div className="flex flex-col justify-center p-6 sm:p-10 relative">
           <button 
-            onClick={() => navigate(-1)} 
+            onClick={() => navigate('/')} 
             className="flex items-center gap-2 text-lg text-black hover:text-gray-600 absolute top-4 left-4 sm:static sm:mb-4"
             >
             <ArrowLeftIcon className="w-5 h-5" />
@@ -110,7 +110,7 @@ function Login() {
                 required
               />
               <motion.button 
-                className="w-full text-white p-3 hover:scale-105 rounded-lg mt-2 transition-all duration-200"
+                className="w-full font-semibold text-white p-3 hover:scale-105 rounded-lg mt-2 transition-all duration-200"
                 style={{
                   background: 'linear-gradient(to right, #ec4899, #f472b6)', // pink gradient awal
                 }}
