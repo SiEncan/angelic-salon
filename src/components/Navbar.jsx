@@ -18,11 +18,22 @@ function NavigationBar() {
     await signOut(auth);
   };
 
+  // <button
+  //   onClick={() => {
+  //     auth.signOut(); // Logout
+  //     navigate("/login"); // Arahkan ke halaman login
+  //   }}
+  //   className="ml-4 bg-red-500 text-white py-2 px-4 rounded-full text-sm font-medium hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+  // >
+  //   Logout
+  // </button>
+
   return (
     <Navbar expand="lg" bg="light" className="shadow-sm">
       <Container>
         <Navbar.Brand className="Brand" as={Link} to="/">
-          Angelic Salon & Spa
+          {/* Angelic Salon & Spa */}
+          <span className="text-pink-600">Angelic Salon & Spa</span>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">

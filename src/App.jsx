@@ -13,6 +13,7 @@ import ManageServices from "./components/Dashboard/ManageServices";
 import AddCustomer from "./components/Dashboard/AddCustomer";
 import ProtectedRoute from './ProtectedRoute';
 import ManageEmployee from "./components/Dashboard/ManageEmployee";
+import HomePage from "./pages/HomePage";
 
 function App() {
   return (
@@ -23,9 +24,10 @@ function App() {
           path="/"
           element={
             <>
-              <HeroSection />
+              <HomePage/>
+              {/* <HeroSection />
               <Carousel />
-              <BookingList />
+              <BookingList /> */}
             </>
           }
         />

@@ -208,7 +208,7 @@ const ManageCustomers = () => {
         className={`bg-pink-400 text-white w-64 fixed inset-y-0 left-0 top-0 transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 transition-transform duration-200 ease-in-out z-20`}
-      >
+        >
         <div className="flex items-center justify-center h-20">
           <img
             src={angelicLogo}

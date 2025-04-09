@@ -57,8 +57,6 @@ const MainDashboard = () => {
         let inProgressBookingsCount = 0;
         let bookedBookingsCount = 0;
         let cancelledBookingsCount = 0;
-
-        console.log(bookings)
         
         bookings.forEach((booking) => {
           const bookingDate = dayjs(booking.date).format("YYYY-MM-DD");
