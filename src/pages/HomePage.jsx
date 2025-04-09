@@ -116,16 +116,15 @@ return (
         </div>
 
         {/* SMALL */}
-        <div className="flex h-[50%] w-full relative justify-center items-center md:hidden">
+        <div className="flex h-[50%] w-full relative justify-center items-end md:hidden">
           <div className="h-[75%] w-full absolute bottom-0 bg-gradient-to-br from-pink-400 via-pink-300 to-purple-300 shadow-lg rounded-xl"></div>
-          <img src='/images/hero-image.png' className="w-full bottom-4 relative z-10" />
+          <img src='/images/hero-image.png' className="relative z-10" />
         </div>
 
-				
         {/* L laptop - 1024P */}
 				<div className="flex w-full relative justify-center items-end hidden md:flex xl:hidden"> {/* ubah items-center jadi items-end */}
 					<div className="h-[75%] w-full absolute bottom-0 bg-gradient-to-br from-pink-400 via-pink-300 to-purple-300 shadow-lg rounded-xl"></div>
-					<img src='/images/hero-image.png' className="w-full relative z-10" /> {/* hapus bottom-0 di sini */}
+					<img src='/images/hero-image.png' className="relative z-10" /> {/* hapus bottom-0 di sini */}
 				</div>
 
         {/* XL laptopL = 1440P */}
@@ -135,7 +134,7 @@ return (
         </div>
       </div>
         
-      <section className="text-center py-20 bg-purple-200 bg-opacity-50 rounded-3xl shadow-md w-full mx-4 mt-16">
+      <section className="text-center py-20 bg-purple-200 bg-opacity-50 rounded-3xl shadow-md mx-4 mt-16">
         <h2 className="text-4xl font-bold mb-2">Find Your Inner Glow</h2>
         <p className="text-lg text-gray-600 mb-16">
         Relax. Refresh. Rejuvenate at Angelic Salon & Spa.

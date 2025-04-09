@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import HeroSection from "./components/HeroSection";
-import BookingList from "./components/BookingList";
 import Carousel from "./components/Carousel";
 import Login from "./components/Login";
 import MainDashboard from "./components/Dashboard/MainDashboard";
