@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import NavigationBar from "../components/Navbar";
 import { auth } from "../firebase"; // Pastikan path sesuai dengan lokasi firebase.js
 import { signOut, onAuthStateChanged } from "firebase/auth";
+import Carousel from "../components/Carousel";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -134,14 +135,15 @@ return (
         </div>
       </div>
         
-      <section className="text-center py-20 bg-purple-200 bg-opacity-50 rounded-3xl shadow-md mx-4 mt-16">
-        <h2 className="text-4xl font-bold mb-2">Find Your Inner Glow</h2>
+      <section className="text-center bg-purple-200 bg-opacity-50 rounded-3xl shadow-md mx-4 mt-16">
+        <Carousel/>
+        {/* <h2 className="text-4xl font-bold mb-2">Find Your Inner Glow</h2>
         <p className="text-lg text-gray-600 mb-16">
         Relax. Refresh. Rejuvenate at Angelic Salon & Spa.
         </p>
         <a href="#services" className="bg-pink-500 text-white px-16 py-3 rounded-full hover:bg-pink-600 transition no-underline">
         Our Location
-        </a>
+        </a> */}
       </section>
 
       {/* About Section */}
@@ -167,9 +169,9 @@ return (
         <h3 className="text-3xl font-bold mb-4 text-center">Contact Us</h3>
         <p className="text-center text-gray-600 mb-6">Visit our salon or get in touch for appointments.</p>
         <div className="text-center">
-          <p>📍 Jl. Anggun No. 10, Jakarta</p>
-          <p>📞 0812-3456-7890</p>
-          <p>📧 angelic@salonspa.com</p>
+          <p>📍 Jln. Padat Karya, Kota Prabumulih</p>
+          <p>📞 0821-7526-6137</p>
+          <p>Instagram: @angelic_salonspamuslimah</p>
         </div>
       </section>
 

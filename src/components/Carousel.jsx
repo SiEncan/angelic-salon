@@ -6,9 +6,16 @@ import barberSalonIcon from '../assets/icons/barbersalon.svg';
 import frisorsalonIcon from '../assets/icons/frisorsalon.svg';
 import massageKlinikIcon from '../assets/icons/massageklinik.svg';
 import fodterapeutIcon from '../assets/icons/fodterapeut.svg';
+import creambath from '../assets/icons/creambath.png';
+import handmassage from '../assets/icons/handmassage.png';
+import menicure from '../assets/icons/menicure.png';
 import ellipseIcon from '../assets/icons/ellipse.svg';
 
 const services = [
+  
+  { id: 7, name: 'Cream Bath', icon: creambath },
+  { id: 8, name: 'Hand Massage', icon: handmassage },
+  { id: 8, name: 'Menicure', icon: menicure },
   { id: 1, name: 'Makeup-artist', icon: makeupArtistIcon },
   { id: 2, name: 'Wellnesscenter', icon: wellnessCenterIcon },
   { id: 3, name: 'Barbersalon', icon: barberSalonIcon },
@@ -47,10 +54,10 @@ export default function Carousel() {
           style={{ transform: `translateX(-${currentIndex * (100 / 3)}%)`, transition: 'transform 0.3s ease-out', width: `${(services.length / 3) * 100}%` }}
         >
           {services.map((service) => (
-            <div key={service.id} className="d-flex flex-column align-items-center" style={{ flex: '0 0 calc(100% / 3)' }}>
+            <div key={service.id} className="d-flex flex-column align-items-center" style={{ flex: '0 0 calc(100% / 4)' }}>
               <div className="position-relative my-5 d-flex align-items-center justify-content-center mb-2" style={{ width: '4rem', height: '4rem' }}>
-                <img src={ellipseIcon} alt="ellipse" className="position-absolute" style={{ width: '100%', left: '-10%' }} />
-                <img src={service.icon} alt={service.name} style={{ width: '200%', height: '200%', zIndex: '1' }} />
+                {/* <img src={ellipseIcon} alt="ellipse" className="position-absolute" style={{ width: '100%', left: '-10%' }} /> */}
+                <img src={service.icon} alt={service.name} style={{ width: '100%', height: '100%', zIndex: '1' }} />
               </div>
               <p className="mt-3 text-center fw-medium">{service.name}</p>
             </div>
