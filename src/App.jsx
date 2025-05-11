@@ -13,6 +13,7 @@ import AddCustomer from "./components/Dashboard/AddCustomer";
 import ProtectedRoute from './ProtectedRoute';
 import ManageEmployee from "./components/Dashboard/ManageEmployee";
 import HomePage from "./pages/HomePage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         />
         
         <Route path="/login" element={<Login />} />
+        <Route path="/profile" element={<ProfilePage />} />
 
         {/* Halaman dashboard admin */}
         <Route path="/admin-dashboard" element={<ProtectedRoute element={<MainDashboard />} />} />

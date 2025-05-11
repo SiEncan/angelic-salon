@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import BookingForm from "./BookingForm";
-import NavigationBar from "./Navbar";
+import NavigationBar from "./NavigationBar";
 import "../styles/HeroSection.css";
 
 const HeroSection = () => {
