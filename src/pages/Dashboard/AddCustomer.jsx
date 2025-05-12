@@ -7,7 +7,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau status autentikasi
 import angelicLogo from '../../assets/images/AngelicSalon.jpg';
 
-import FeedbackModal from "../FeedBackModal";
+import FeedbackModal from "../../components/FeedBackModal";
 
 const LoadingModal = ({ isOpen }) => {
   if (!isOpen) return null;

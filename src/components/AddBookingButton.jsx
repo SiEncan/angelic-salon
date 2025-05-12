@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { collection, getDocs, query, where, addDoc, Timestamp } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db } from "../firebase";
 import dayjs from "dayjs";
 
-import FeedbackModal from "../FeedBackModal";
+import FeedbackModal from "./FeedBackModal";
 import EmployeeSelection from "./EmployeeSelection";
 
 const AddBookingButton = () => {

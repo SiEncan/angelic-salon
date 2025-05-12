@@ -2,16 +2,15 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-import HeroSection from "./components/HeroSection";
 import Carousel from "./components/Carousel";
 import Login from "./components/Login";
-import MainDashboard from "./components/Dashboard/MainDashboard";
-import Bookings from "./components/Dashboard/Bookings";
-import ManageCustomers from "./components/Dashboard/ManageCustomers";
-import ManageServices from "./components/Dashboard/ManageServices";
-import AddCustomer from "./components/Dashboard/AddCustomer";
+import MainDashboard from "./pages/Dashboard/MainDashboard";
+import Bookings from "./pages/Dashboard/Bookings";
+import ManageCustomers from "./pages/Dashboard/ManageCustomers";
+import ManageServices from "./pages/Dashboard/ManageServices";
+import AddCustomer from "./pages/Dashboard/AddCustomer";
 import ProtectedRoute from './ProtectedRoute';
-import ManageEmployee from "./components/Dashboard/ManageEmployee";
+import ManageEmployee from "./pages/Dashboard/ManageEmployee";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 
@@ -25,9 +24,6 @@ function App() {
           element={
             <>
               <HomePage/>
-              {/* <HeroSection />
-              <Carousel />
-              <BookingList /> */}
             </>
           }
         />

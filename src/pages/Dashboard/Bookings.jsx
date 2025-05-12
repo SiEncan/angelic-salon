@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
 import { doc, getDoc, collection, onSnapshot, updateDoc, where, query } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau status autentikasi
-import AddBookingButton from "./AddBookingButton";
-import StatusDropdown from "./StatusDropdown";
+import AddBookingButton from "../../components/AddBookingButton";
+import StatusDropdown from "../../components/StatusDropdown";
 import angelicLogo from '../../assets/images/AngelicSalon.jpg';
 
 import dayjs from "dayjs";

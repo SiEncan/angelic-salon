@@ -349,6 +349,7 @@ const ManageCustomers = () => {
                 <ChevronRightIcon className="h-5 w-5 text-gray-600" />
               </button>
             </div>
+            <button onClick={handleAddCustomer} className="px-5 py-2 mt-4 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition duration-200">Register Customer</button>
           </div>
         </main>
       </div>
