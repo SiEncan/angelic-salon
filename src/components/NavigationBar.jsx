@@ -48,26 +48,65 @@ function NavigationBar() {
           className="md:hidden text-gray-700"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16" />
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         </button>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex space-x-6 items-center">
-          <Link to="/"className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Home</Link>
+          <Link
+            to="/"
+            className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+          >
+            Home
+          </Link>
           {/* <a href="" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Home</a> */}
-          <a href="#about" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">About</a>
-          <a href="#services" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Services</a>
-          <a href="#contact" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Contact</a>
+          <a
+            href="#about"
+            className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+          >
+            About
+          </a>
+          <a
+            href="#services"
+            className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+          >
+            Services
+          </a>
+          <a
+            href="#contact"
+            className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+          >
+            Contact
+          </a>
           {user ? (
             <>
               {userRole === "customer" && (
-                <Link to="/profile" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Profile</Link>
+                <Link
+                  to="/profile"
+                  className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+                >
+                  Profile
+                </Link>
               )}
               {userRole === "admin" && (
-                <Link to="/admin-dashboard" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Admin Dashboard</Link>
+                <Link
+                  to="/admin-dashboard"
+                  className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+                >
+                  Admin Dashboard
+                </Link>
               )}
               <button
                 onClick={handleLogout}
@@ -98,17 +137,47 @@ function NavigationBar() {
             className="md:hidden overflow-hidden px-6"
           >
             <div className="flex flex-col space-y-4 mb-2">
-              <a href="#home" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Home</a>
-              <a href="#about" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">About</a>
-              <a href="#services" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Services</a>
-              <a href="#contact" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Contact</a>
+              <Link
+                to="/"
+                className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+              >
+                Home
+              </Link>
+              <a
+                href="#about"
+                className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+              >
+                About
+              </a>
+              <a
+                href="#services"
+                className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+              >
+                Services
+              </a>
+              <a
+                href="#contact"
+                className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+              >
+                Contact
+              </a>
               {user ? (
                 <>
                   {userRole === "customer" && (
-                    <Link to="/profile" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Profile</Link>
+                    <Link
+                      to="/profile"
+                      className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+                    >
+                      Profile
+                    </Link>
                   )}
                   {userRole === "admin" && (
-                    <Link to="/admin-dashboard" className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline">Admin Dashboard</Link>
+                    <Link
+                      to="/admin-dashboard"
+                      className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
+                    >
+                      Admin Dashboard
+                    </Link>
                   )}
                   <button
                     onClick={handleLogout}

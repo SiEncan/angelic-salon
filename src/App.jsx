@@ -4,13 +4,13 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 import Carousel from "./components/Carousel";
 import Login from "./components/Login";
-import MainDashboard from "./pages/Dashboard/MainDashboard";
-import Bookings from "./pages/Dashboard/Bookings";
-import ManageCustomers from "./pages/Dashboard/ManageCustomers";
-import ManageServices from "./pages/Dashboard/ManageServices";
-import AddCustomer from "./pages/Dashboard/AddCustomer";
+import MainDashboard from "./pages/admin-dashboard/MainDashboard";
+import Bookings from "./pages/admin-dashboard/Bookings";
+import ManageCustomers from "./pages/admin-dashboard/ManageCustomers";
+import ManageServices from "./pages/admin-dashboard/ManageServices";
+import AddCustomer from "./pages/admin-dashboard/AddCustomer";
 import ProtectedRoute from './ProtectedRoute';
-import ManageEmployee from "./pages/Dashboard/ManageEmployee";
+import ManageEmployee from "./pages/admin-dashboard/ManageEmployee";
 import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 
