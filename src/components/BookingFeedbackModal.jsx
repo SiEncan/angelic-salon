@@ -57,7 +57,7 @@ const FeedbackModal = ({ isOpen, type, title, description, onClose, onSuccess })
                       : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
                 >
-                  {type === "success" ? "Oke!" : "Coba Lagi"}
+                  {type === "success" ? "Ok" : "Coba Lagi"}
                 </button>
               </div>
             </div>

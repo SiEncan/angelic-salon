@@ -10,7 +10,7 @@ import EmployeeSelection from "./EmployeeSelection"
 import FeedbackModal from "./BookingFeedbackModal"
 import ServiceList from "./ServiceList"
 
-const CustomerBookingButton = ({ user, profile, isOpen, setIsOpen, onBookingSuccess }) => {
+const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSuccess }) => {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
   const [feedbackModalType, setFeedbackModalType] = useState("")
   const [feedbackModalTitle, setFeedbackModalTitle] = useState("")
@@ -140,7 +140,7 @@ const CustomerBookingButton = ({ user, profile, isOpen, setIsOpen, onBookingSucc
     try {
       const bookingData = {
         customerName: profile.fullName,
-        customerId: user.uid,
+        customerId: userId,
         phone: profile?.phone || "",
         date,
         time,
@@ -154,7 +154,7 @@ const CustomerBookingButton = ({ user, profile, isOpen, setIsOpen, onBookingSucc
 
       await addDoc(collection(db, "bookings"), bookingData)
 
-      const userRef = doc(db, "users", user.uid)
+      const userRef = doc(db, "users", userId)
       await updateDoc(userRef, {
         bookingCount: increment(1),
       })
@@ -282,14 +282,6 @@ const CustomerBookingButton = ({ user, profile, isOpen, setIsOpen, onBookingSucc
                           value={time}
                           onChange={(e) => {
                             const selectedTime = e.target.value
-                            if (!isTimeInRange(selectedTime)) {
-                              setFeedbackModalType("failed")
-                              setFeedbackModalTitle("Gagal Memilih Waktu")
-                              setFeedbackModalDescription("Waktu booking hanya tersedia antara jam 09:00 - 17:00")
-                              setIsFeedbackModalOpen(true)
-                              return
-                            }
-
                             setSelectedEmployee(null)
                             setTime(selectedTime)
                           }}

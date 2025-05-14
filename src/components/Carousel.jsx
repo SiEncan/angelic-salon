@@ -15,7 +15,7 @@ const services = [
   
   { id: 7, name: 'Cream Bath', icon: creambath },
   { id: 8, name: 'Hand Massage', icon: handmassage },
-  { id: 8, name: 'Menicure', icon: menicure },
+  { id: 9, name: 'Menicure', icon: menicure },
   { id: 1, name: 'Makeup-artist', icon: makeupArtistIcon },
   { id: 2, name: 'Wellnesscenter', icon: wellnessCenterIcon },
   { id: 3, name: 'Barbersalon', icon: barberSalonIcon },
