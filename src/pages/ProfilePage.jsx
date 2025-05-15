@@ -820,7 +820,7 @@ const ProfilePage = () => {
                   <div className="mt-4">
                     <button
                       onClick={() => setIsBookingOpen(true)}
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 active:from-purple-700 active:to-pink-700 transition text-white px-6 py-3 rounded-lg font-semibold shadow-md flex items-center justify-center gap-2"
+                      className="bg-gradient-to-r mx-auto from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 active:from-purple-700 active:to-pink-700 transition text-white px-6 py-3 rounded-lg font-semibold shadow-md flex items-center justify-center gap-2"
                     >
                       <Calendar className="w-5 h-5" />
                       Book Your First Appointment

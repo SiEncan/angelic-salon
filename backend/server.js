@@ -54,6 +54,7 @@ app.post('/createCustomer', async (req, res) => {
       email: userRecord.email,
       role: 'customer',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      bookingCount: 0,
     });
 
     // Kirimkan UID ke frontend setelah berhasil
