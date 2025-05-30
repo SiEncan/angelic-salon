@@ -9,7 +9,7 @@ import {
   Trash2,
   Scissors
 } from "lucide-react";
-import ConfirmationDialog from "./ConfirmationDialog";
+import ConfirmationDialog from "../ConfirmationDialog";
 
 const BookingActions = ({
   booking,
@@ -60,7 +60,7 @@ const BookingActions = ({
       color: "text-blue-500",
     },
     {
-      value: "inprogress",
+      value: "in progress",
       label: "In Progress",
       icon: <Scissors className="w-4 h-4" />,
       color: "text-purple-500",
@@ -69,7 +69,8 @@ const BookingActions = ({
 
   const isFinalState =
     booking.status?.toLowerCase() === "completed" ||
-    booking.status?.toLowerCase() === "cancelled";
+    booking.status?.toLowerCase() === "cancelled" ||
+    booking.status?.toLowerCase() === "rejected";
 
   const handleConfirm = () => {
     if (confirmAction.type === "status") {
@@ -116,7 +117,7 @@ const BookingActions = ({
       const topPosition = showAbove
         ? showStatusOptions
           ? rect.top + scrollY - dropdownHeight + 50
-          : booking.status?.toLowerCase() === "pending" || booking.status?.toLowerCase() === "inProgress" || booking.status?.toLowerCase() === "confirmed"
+          : booking.status?.toLowerCase() === "pending" || booking.status?.toLowerCase() === "in progress" || booking.status?.toLowerCase() === "confirmed"
           ? rect.top + scrollY - dropdownHeight + 70
           : rect.top + scrollY - dropdownHeight + 100
         : rect.bottom + scrollY + 4;
@@ -128,7 +129,7 @@ const BookingActions = ({
         left: leftPosition,
       });
     }
-  }, [isOpen, showStatusOptions]);
+  }, [booking.status, isOpen, showStatusOptions]);
 
   return (
     <div ref={buttonRef}>
@@ -158,7 +159,7 @@ const BookingActions = ({
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-[200]"
+            className="fixed inset-0 z-20"
             onClick={() => {
               setIsOpen(false);
               setShowStatusOptions(false);
@@ -166,7 +167,7 @@ const BookingActions = ({
           />
 
           <div
-            className="fixed z-[201] w-48 max-w-[90vw] bg-white rounded-md shadow-lg py-1 border border-gray-200"
+            className="fixed z-20 w-48 max-w-[90vw] bg-white rounded-md shadow-lg py-1 border border-gray-200"
             style={{
               top: dropdownPosition.top,
               left: dropdownPosition.left,
@@ -253,6 +254,7 @@ const BookingActions = ({
           message={confirmAction.message}
           onConfirm={handleConfirm}
           onCancel={() => setShowConfirmDialog(false)}
+          condition={confirmAction.type}
         />
       )}
     </div>

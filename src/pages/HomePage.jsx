@@ -7,12 +7,19 @@ import {
 } from "firebase/firestore";
 import NavigationBar from "../components/NavigationBar";
 import Carousel from "../components/Carousel";
-import CustomerBookingButton from "../components/CustomerBookingButton";
+import CustomerBookingModal from "../components/customer-profile/CustomerBookingModal";
+import FeedbackModal from "../components/BookingFeedbackModal";
 
 const HomePage = () => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [userId, setUserId] = useState(null);
   const [profile, setProfile] = useState(null);
+
+
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackModalType, setFeedbackModalType] = useState("");
+  const [feedbackModalTitle, setFeedbackModalTitle] = useState("");
+  const [feedbackModalDescription, setFeedbackModalDescription] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -69,7 +76,10 @@ const HomePage = () => {
                 if (userId) {
                   setIsBookingOpen(true);
                 } else {
-                  alert("Please login to book an appointment.");
+                  setFeedbackModalType("failed");
+                  setFeedbackModalTitle("You need to be logged in.");
+                  setFeedbackModalDescription("Please log in to book an appointment.");
+                  setIsFeedbackModalOpen(true);
                 }
               }}
               className="md:hidden w-fit bg-[#171A31] hover:bg-opacity-80 transition duration-200 text-xs sm:text-sm font-semibold shadow-lg rounded-lg px-3 py-2 text-white"
@@ -81,7 +91,10 @@ const HomePage = () => {
                 if (userId) {
                   setIsBookingOpen(true);
                 } else {
-                  alert("Please login to book an appointment.");
+                  setFeedbackModalType("failed");
+                  setFeedbackModalTitle("You need to be logged in.");
+                  setFeedbackModalDescription("Please log in to book an appointment.");
+                  setIsFeedbackModalOpen(true);
                 }
               }}
               className="hidden md:flex w-fit bg-[#171A31] hover:bg-opacity-80 transition duration-200 font-semibold shadow-lg rounded-lg px-5 py-3 mt-2 text-white"
@@ -89,30 +102,32 @@ const HomePage = () => {
               Book an Appointment
             </button>
           </div>
-
-          <CustomerBookingButton
-            userId={userId}
-            profile={profile}
-            isOpen={isBookingOpen}
-            setIsOpen={setIsBookingOpen}
-          />
+          
+          {userId && profile && (
+            <CustomerBookingModal
+              userId={userId}
+              profile={profile}
+              isOpen={isBookingOpen}
+              setIsOpen={setIsBookingOpen}
+            />
+          )}
 
           {/* SMALL */}
           <div className="flex h-[50%] w-full relative justify-center items-end md:hidden">
             <div className="h-[75%] w-full absolute bottom-0 bg-gradient-to-br from-pink-400 via-pink-300 to-purple-300 shadow-lg rounded-xl"></div>
-            <img src="/images/hero-image.png" className="relative z-10" />
+            <img src="/images/hero-image.png" className="relative" />
           </div>
 
           {/* L laptop - 1024P */}
           <div className="flex w-full relative justify-center items-end hidden md:flex xl:hidden">
             <div className="h-[75%] w-full absolute bottom-0 bg-gradient-to-br from-pink-400 via-pink-300 to-purple-300 shadow-lg rounded-xl"></div>
-            <img src="/images/hero-image.png" className="relative z-10" />
+            <img src="/images/hero-image.png" className="relative" />
           </div>
 
           {/* XL laptopL = 1440P */}
           <div className="flex w-full relative justify-center items-center hidden xl:flex">
             <div className="h-[75%] w-full absolute bottom-0 bg-gradient-to-br from-pink-400 via-pink-300 to-purple-300 shadow-lg rounded-xl"></div>
-            <img src="/images/hero-image.png" className="relative z-10" />
+            <img src="/images/hero-image.png" className="relative" />
           </div>
         </div>
 
@@ -148,6 +163,14 @@ const HomePage = () => {
             />
           </div>
         </section>
+
+        <FeedbackModal
+          isOpen={isFeedbackModalOpen}
+          type={feedbackModalType}
+          title={feedbackModalTitle}
+          description={feedbackModalDescription}
+          onClose={() => setIsFeedbackModalOpen(false)}
+        />
 
         {/* Contact Section */}
         <section id="contact" className="py-16">

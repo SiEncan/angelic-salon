@@ -6,6 +6,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
+import FeedbackModal from "../components/BookingFeedbackModal";
 
 import character from '../assets/images/LoginCharacter.png';
 
@@ -15,6 +16,11 @@ function Login() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackModalType, setFeedbackModalType] = useState("");
+  const [feedbackModalTitle, setFeedbackModalTitle] = useState("");
+  const [feedbackModalDescription, setFeedbackModalDescription] = useState("");
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
@@ -22,7 +28,7 @@ function Login() {
           const userDoc = await getDoc(doc(db, "users", user.uid));
           const role = userDoc.exists() ? userDoc.data().role : "customer";
 
-          if (role === "admin") {
+          if (role === "admin" || role === "owner") {
             navigate("/admin-dashboard");
           } else {
             navigate("/");
@@ -50,25 +56,23 @@ function Login() {
       const role = userDoc.exists() ? userDoc.data().role : "customer";
 
       // Redirect sesuai role
-      if (role === "admin" || role === "employee") {
+      if (role === "admin" || role === "owner") {
         navigate("/admin-dashboard");
       } else {
         navigate("/");
       }
     } catch (error) {
+      setFeedbackModalType("failed");
+      setFeedbackModalTitle("Login Failed");
+      setFeedbackModalDescription(
+        "There was an error logging in. Please check your email and password."
+      );
+      setIsFeedbackModalOpen(true);
       console.error("Login failed", error);
     } finally {
       setLoading(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-r from-blue-200 to-pink-300">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-pink-500"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-200 to-pink-300 p-4">
@@ -112,14 +116,25 @@ function Login() {
               <motion.button 
                 className="w-full font-semibold text-white p-3 hover:scale-105 rounded-lg mt-2 transition-all duration-200"
                 style={{
-                  background: 'linear-gradient(to right, #ec4899, #f472b6)', // pink gradient awal
+                  background: 'linear-gradient(to right, #ec4899, #f472b6)',
                 }}
                 whileHover={{
-                  background: 'linear-gradient(to right, #db2777,rgb(184, 64, 112))', // pink gradient lebih gelap
+                  background: 'linear-gradient(to right, #db2777,rgb(184, 64, 112))',
                 }}
-                transition={{ duration: 0.3 }} // Durasi transisi
+                transition={{ duration: 0.3 }}
+                disabled={loading}
                 >
-                LOGIN
+                {!loading ? (
+                  'LOGIN'
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-white font-semibold">Loading...</span>
+                  </div>
+                )}
               </motion.button>
             </form>
           </div>
@@ -131,6 +146,14 @@ function Login() {
           <img src={character} alt="Character" className="w-3/4 left-5 py-5 relative z-10" />
         </div>
       </div>
+      {/* Feedback Modal */}
+        <FeedbackModal
+          isOpen={isFeedbackModalOpen}
+          type={feedbackModalType}
+          title={feedbackModalTitle}
+          description={feedbackModalDescription}
+          onClose={() => setIsFeedbackModalOpen(false)}
+        />
     </div>
   );
 }

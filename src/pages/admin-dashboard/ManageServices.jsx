@@ -1,38 +1,56 @@
 import { useState, useEffect } from "react";
-import { HomeIcon, UsersIcon, ClipboardDocumentListIcon, BriefcaseIcon, ChartPieIcon, BellIcon, Bars3Icon, ScissorsIcon } from "@heroicons/react/24/outline";
-import { useNavigate, Link, useLocation } from "react-router-dom"; // Import useLocation
+import {
+  ScissorsIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 // eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from "framer-motion";
-import { auth, db } from "../../firebase";  // Impor auth dan db dari file firebase Anda
-import { doc, getDoc, updateDoc, addDoc, collection, deleteDoc, onSnapshot } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";  // Impor untuk memantau status autentikasi
-import angelicLogo from '../../assets/images/AngelicSalon.jpg';
-import { Dialog } from "@headlessui/react";
+import { motion } from "framer-motion";
+import { db } from "../../firebase";
+import {
+  doc,
+  updateDoc,
+  addDoc,
+  collection,
+  deleteDoc,
+  onSnapshot,
+} from "firebase/firestore";
+import { Dialog, Transition } from "@headlessui/react";
+import { Fragment } from "react";
 
 const ManageServices = () => {
-  const [loggedName, setLoggedName] = useState("");
-  const [userId, setUserId] = useState(null);
-  const navigate = useNavigate();
-  const location = useLocation();  // Dapatkan lokasi saat ini
-
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);  
+  const [isOpen, setIsOpen] = useState(false);
 
   const [services, setServices] = useState([]);
-  const [currentService, setCurrentService] = useState({ name: "", price: 0 });
+  const [currentService, setCurrentService] = useState({
+    name: "",
+    price: 0,
+    duration: "",
+  });
   const [editingService, setEditingService] = useState(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [serviceIdToDelete, setServiceIdToDelete] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "services"), (snapshot) => {
-      setServices(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setServices(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
-  
-    return () => unsubscribe(); // Membersihkan listener saat komponen di-unmount
-  }, []);  
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSave = async () => {
+    if (
+      !currentService.name ||
+      !currentService.price ||
+      !currentService.duration
+    ) {
+      alert("Please fill in all fields");
+      return;
+    }
+
     if (editingService) {
       await updateDoc(doc(db, "services", editingService.id), currentService);
     } else {
@@ -53,212 +71,359 @@ const ManageServices = () => {
     }
   };
 
-  ////////////////////////////////////////////// Sidebar ////////////////////////////////////////////////////////////
-  useEffect(() => {
-    // Memantau perubahan status autentikasi
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid); // Simpan UID pengguna yang sedang login
-      } else {
-        console.log("User not logged in");
-      }
-    });
-
-    // Hapus listener ketika komponen dibersihkan
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    // Ambil nama pengguna setelah userId tersedia
-    if (userId) {
-      const fetchUserName = async () => {
-        const userDocRef = doc(db, "users", userId); // Akses dokumen berdasarkan userId
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) {
-          setLoggedName(userDocSnap.data().fullName);
-        } else {
-          console.log("User not found!");
-        }
-      };
-
-      fetchUserName();
-    }
-  }, [userId]); // Dependensi ke userId untuk memicu fetch data
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  const filteredServices = services.filter((service) =>
+    service.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div
-        className={`bg-pink-400 text-white w-64 fixed inset-y-0 left-0 top-0 transform ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 transition-transform duration-200 ease-in-out z-20`}
-      >
-        <div className="flex items-center justify-center h-20">
-          <img
-            src={angelicLogo}
-            alt="Logo"
-            className="h-16 w-16"
-          />
-        </div>
-        <nav className="flex-1 px-2 py-4 space-y-3">
-          {[{ icon: HomeIcon, label: "Dashboard", path: "/admin-dashboard" },
-            { icon: ClipboardDocumentListIcon, label: "Bookings", path: "/admin-dashboard/bookings" },
-            { icon: UsersIcon, label: "Manage Customers", path: "/admin-dashboard/manage-customers" },
-            { icon: ScissorsIcon, label: "Manage Services", path: "/admin-dashboard/manage-services" },
-            { icon: BriefcaseIcon, label: "Manage Employee", path: "/admin-dashboard/manage-employee" },
-            { icon: ChartPieIcon, label: "Reports", path: "/reports" }].map((item, index) => (
-            <Link
-              key={index}
-              to={item.path}
-              className={`flex items-center px-2 py-2 text-sm transition duration-150 font-medium text-white hover:text-white rounded-md no-underline 
-                ${location.pathname === item.path ? 'bg-pink-600' : 'hover:bg-pink-500'}`}
-            >
-              <item.icon className="h-5 w-5 mr-3" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+    <>
+      <div className="mx-auto">
+        {/* Header with search and add button */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                Service Management
+              </h2>
+              <p className="text-gray-500">
+                Manage your salon's service offerings
+              </p>
+            </div>
 
-        <button
-          onClick={() => setIsSidebarOpen(false)} // Menutup sidebar
-          className="absolute top-4 right-4 text-white md:hidden" // Posisi di kanan atas sidebar
-        >
-          <span className="text-3xl">&times;</span> {/* Karakter 'X' sebagai tombol close */}
-        </button>
-      </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search services..."
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent w-full"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col md:ml-64 overflow-hidden">
-        <header className="w-full">
-          <div className="relative md:z-auto z-10 items-center justify-center flex-shrink-0 flex h-16 bg-white shadow">
-            {/* Sidebar Toggle Button */}
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="ml-4 focus:outline-none md:hidden"
-            >
-              <Bars3Icon className="h-6 w-6 mar" />
-            </button>
-
-            <h2 className="text-sm sm:text-2xl font-bold mt-1 ml-8 text-gray-700">Manage Services</h2>
-
-            {/* Spacer */}
-            <div className="flex-1"></div>
-
-            {/* Notifications & Profile */}
-            <div className="flex items-center mr-3">
-              <button className="bg-white p-2 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                <BellIcon className="h-6 w-6" />
-              </button>
-              <p className="mt-3 text-sm font-medium text-gray-700">{loggedName || "Loading..."}</p>
-
-              {/* Logout Button */}
               <button
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-300 flex items-center justify-center gap-2"
                 onClick={() => {
-                  auth.signOut(); // Fungsi untuk logout
-                  navigate("/login"); // Arahkan ke halaman login
+                  setCurrentService({ name: "", price: "", duration: "" });
+                  setEditingService(null);
+                  setIsOpen(true);
                 }}
-                className="ml-4 bg-red-500 text-white py-2 px-4 rounded-full text-sm font-medium hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
-                Logout
+                <PlusIcon className="h-5 w-5" />
+                <span>Add Service</span>
               </button>
             </div>
           </div>
-        </header>
+        </div>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-gradient-to-r from-purple-200 to-pink-200">
-          <div className="mx-auto overflow-x-auto p-6 bg-gray-100 rounded-lg shadow-md">
-            {/* <h2 className="text-3xl font-bold mb-6 text-gray-700">Manage Services</h2> */}
-            <button
-              className="bg-purple-500 text-white px-5 py-2 mb-3 rounded-md hover:bg-purple-600 transition duration-300"
-              onClick={() => {
-                setCurrentService({ name: "", price: "", duration: "" });
-                setEditingService(null);
-                setIsOpen(true);
-              }}
-            >
-              + Add Service
-            </button>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(400px,1fr))] mt-2 gap-6">
-              {services.map((service) => (
-                <div key={service.id} className="bg-pink-400 min-w-[300px] p-5 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-white">{service.name}</h3>
-                    <p className="text-white font-semibold">Rp {service.price.toLocaleString('id-ID')}</p>
-                    <p className="text-white">Duration Time: {service.duration} min</p>
+        {/* Services grid */}
+        {filteredServices.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {filteredServices.map((service) => (
+              <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+              >
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-3"></div>
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold text-gray-800">
+                      {service.name}
+                    </h3>
+                    <div className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                      {service.duration} min
+                    </div>
                   </div>
-                  <div className="flex space-x-3 mt-3 sm:mt-0 sm:flex-nowrap w-full sm:w-auto">
+
+                  <div className="mb-6">
+                    <p className="text-2xl font-bold text-pink-600">
+                      Rp {service.price.toLocaleString("id-ID")}
+                    </p>
+                  </div>
+
+                  <div className="flex space-x-3">
                     <button
-                      className="bg-pink-500 text-white px-4 py-1 rounded-md hover:bg-pink-700 transition duration-200 w-full sm:w-auto"
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg transition duration-200 flex items-center justify-center gap-1"
                       onClick={() => {
                         setCurrentService(service);
                         setEditingService(service);
                         setIsOpen(true);
                       }}
                     >
+                      <PencilIcon className="h-4 w-4" />
                       Edit
                     </button>
                     <button
-                      className="bg-purple-500 text-white px-4 py-1 rounded-md hover:bg-purple-600 transition duration-200 w-full sm:w-auto"
+                      className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg transition duration-200 flex items-center justify-center gap-1"
                       onClick={() => confirmDelete(service.id)}
                     >
+                      <TrashIcon className="h-4 w-4" />
                       Delete
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-            
-            {/* Modal */}
-            <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <Dialog.Panel className="bg-white p-6 rounded-lg shadow-xl w-96">
-                <Dialog.Title className="text-lg font-bold mb-4 text-gray-700 text-center">{editingService ? "Edit Service" : "Add Service"}</Dialog.Title>
-                <input
-                  type="text"
-                  className="border p-3 w-full rounded-md mb-3 focus:ring-2 focus:ring-blue-400"
-                  placeholder="Service Name"
-                  value={currentService.name}
-                  onChange={(e) => setCurrentService({ ...currentService, name: e.target.value })}
-                />
-                <input
-                  type="number"
-                  className="border p-3 w-full rounded-md mb-3 focus:ring-2 focus:ring-blue-400"
-                  placeholder="Price"
-                  value={currentService.price}
-                  onChange={(e) => setCurrentService({ ...currentService, price: parseInt(e.target.value) || 0 })}
-                  />
-                <input
-                  type="number"
-                  className="border p-3 w-full rounded-md mb-3 focus:ring-2 focus:ring-blue-400"
-                  placeholder="Estimate Time (minutes)"
-                  value={currentService.duration}
-                  onChange={(e) => setCurrentService({ ...currentService, duration: e.target.value })}
-                />
-                <div className="flex justify-end space-x-3">
-                  <button onClick={() => setIsOpen(false)} className="px-5 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition duration-200">Cancel</button>
-                  <button onClick={handleSave} className="px-5 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200">Save</button>
-                </div>
-              </Dialog.Panel>
-            </Dialog>
-            {/* Confirmation Dialog */}
-            <Dialog open={isConfirmOpen} onClose={() => setIsConfirmOpen(false)} className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <Dialog.Panel className="bg-white p-6 rounded-lg shadow-xl w-96">
-                <Dialog.Title className="text-lg font-bold mb-4 text-gray-700 text-center">Confirm Delete</Dialog.Title>
-                <p className="text-gray-600 mb-4">Are you sure you want to delete this service?</p>
-                <div className="flex justify-end space-x-3">
-                  <button onClick={() => setIsConfirmOpen(false)} className="px-5 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition duration-200">Cancel</button>
-                  <button onClick={handleDelete} className="px-5 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-200">Delete</button>
-                </div>
-              </Dialog.Panel>
-            </Dialog>
+              </motion.div>
+            ))}
           </div>
-        </main>
+        ) : (
+          <div className="bg-white rounded-xl shadow-md p-12 text-center">
+            {searchTerm ? (
+              <>
+                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <ScissorsIcon className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No services found
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  No services match your search for "{searchTerm}"
+                </p>
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="text-purple-600 hover:text-purple-800 font-medium"
+                >
+                  Clear search
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                  <ScissorsIcon className="h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No services yet
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  Get started by adding your first service
+                </p>
+                <button
+                  onClick={() => {
+                    setCurrentService({ name: "", price: "", duration: "" });
+                    setEditingService(null);
+                    setIsOpen(true);
+                  }}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg shadow-md transition duration-300 inline-flex items-center gap-2"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                  <span>Add Service</span>
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+
+      {/* Add/Edit Service Modal */}
+      <Transition appear show={isOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-30"
+          onClose={() => setIsOpen(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-50" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-bold text-gray-900 mt-4 text-center"
+                  >
+                    {editingService ? "Edit Service" : "Add New Service"}
+                  </Dialog.Title>
+
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Service Name
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="e.g. Haircut, Manicure"
+                        value={currentService.name}
+                        onChange={(e) =>
+                          setCurrentService({
+                            ...currentService,
+                            name: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Price (Rp)
+                      </label>
+                      <input
+                        type="number"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="e.g. 150000"
+                        value={currentService.price}
+                        onChange={(e) =>
+                          setCurrentService({
+                            ...currentService,
+                            price: Number.parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Duration (minutes)
+                      </label>
+                      <input
+                        type="number"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="e.g. 30, 60, 90"
+                        value={currentService.duration}
+                        onChange={(e) =>
+                          setCurrentService({
+                            ...currentService,
+                            duration: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-8 flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-sm font-medium text-white hover:from-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      onClick={handleSave}
+                    >
+                      {editingService ? "Update Service" : "Add Service"}
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Confirmation Dialog */}
+      <Transition appear show={isConfirmOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-30"
+          onClose={() => setIsConfirmOpen(false)}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-50" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <div className="absolute top-0 left-0 right-0 h-2 bg-red-500"></div>
+
+                  <div className="mt-4 text-center">
+                    <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                      <TrashIcon className="h-6 w-6 text-red-600" />
+                    </div>
+                    <Dialog.Title
+                      as="h3"
+                      className="text-lg font-medium text-gray-900"
+                    >
+                      Delete Service
+                    </Dialog.Title>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        Are you sure you want to delete this service? This
+                        action cannot be undone.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-center space-x-3">
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                      onClick={() => setIsConfirmOpen(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      onClick={handleDelete}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+    </>
   );
 };
 
