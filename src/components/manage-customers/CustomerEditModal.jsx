@@ -10,6 +10,7 @@ const CustomerEditModal = ({ isOpen, onClose, customer, onSave }) => {
     address: "",
     notes: "",
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (customer) {
@@ -31,9 +32,15 @@ const CustomerEditModal = ({ isOpen, onClose, customer, onSave }) => {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    onSave({ ...customer, ...formData })
+    setIsSubmitting(true)
+
+    try {
+      await onSave({ ...customer, ...formData })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!customer) return null
@@ -72,7 +79,7 @@ const CustomerEditModal = ({ isOpen, onClose, customer, onSave }) => {
                   </Dialog.Title>
                   <button
                     onClick={onClose}
-                    className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
                   >
                     <XMarkIcon className="h-5 w-5 text-gray-500" />
                   </button>
@@ -81,7 +88,7 @@ const CustomerEditModal = ({ isOpen, onClose, customer, onSave }) => {
                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                   <div>
                     <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name
+                      Full Name *
                     </label>
                     <input
                       type="text"
@@ -96,7 +103,7 @@ const CustomerEditModal = ({ isOpen, onClose, customer, onSave }) => {
 
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address
+                      Email Address *
                     </label>
                     <input
                       type="email"
@@ -155,15 +162,24 @@ const CustomerEditModal = ({ isOpen, onClose, customer, onSave }) => {
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      disabled={isSubmitting}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-md text-sm font-medium hover:from-purple-600 hover:to-pink-600"
+                      disabled={isSubmitting}
+                      className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-md text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-colors disabled:opacity-50 flex items-center justify-center"
                     >
-                      Save Changes
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        "Save Changes"
+                      )}
                     </button>
                   </div>
                 </form>

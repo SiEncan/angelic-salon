@@ -3,7 +3,7 @@ import { Calendar, Clock, Star, MessageSquare } from 'lucide-react'
 import { formatDate, formatTime, getStatusDetails } from "./../../utils/formatters"
 import FeedbackReviewModal from "./FeedbackReviewModal"
 
-const BookingHistorySection = ({ historyBookings, setIsBookingOpen, onReviewSubmitted }) => {
+const BookingHistorySection = ({ historyBookings, setIsBookingOpen, onReviewSubmitted, bookingCount }) => {
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
 
@@ -81,8 +81,8 @@ const BookingHistorySection = ({ historyBookings, setIsBookingOpen, onReviewSubm
                           Add Review
                         </button>
                       ) : (
-                        <span className="text-gray-400 text-xs">
-                          {booking.status === "cancelled" || booking.status === "rejected" ? "Not available" : ""}
+                        <span className="text-gray-400 text-xs italic">
+                          {booking.status === "cancelled" || booking.status === "rejected" || booking.status === "in progress" ? "Not available" : ""}
                         </span>
                       )}
                     </div>
@@ -189,6 +189,7 @@ const BookingHistorySection = ({ historyBookings, setIsBookingOpen, onReviewSubm
         onClose={() => setIsReviewModalOpen(false)}
         booking={selectedBooking}
         onReviewSubmitted={() => onReviewSubmitted()}
+        bookingCount={bookingCount}
       />
     </div>
   )

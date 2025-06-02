@@ -170,6 +170,8 @@ const MainDashboard = () => {
               cancelledBookingsCount += 1;
             } else if (booking.status?.toLowerCase() === "rejected") {
               rejectedBookingsCount += 1;
+            } else if (booking.status?.toLowerCase() === "in progress") {
+              pendingRevenueSum += booking.totalPrice || 0;
             }
             totalBookingsCount += 1;
           }

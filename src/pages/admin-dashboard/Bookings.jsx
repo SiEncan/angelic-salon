@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { db } from "../../firebase"
-import { doc, collection, onSnapshot, updateDoc, deleteDoc, where, query, orderBy, Timestamp } from "firebase/firestore"
+import { doc, collection, onSnapshot, updateDoc, deleteDoc, where, query, orderBy, Timestamp, getDocs } from "firebase/firestore"
 import dayjs from "dayjs"
 import "dayjs/locale/id"
 import { AnimatePresence } from "framer-motion"
@@ -13,7 +13,7 @@ import BookingTable from "../../components/manage-bookings/BookingTable"
 import MonthNavigation from "../../components/MonthNavigation"
 import BookingDetailsModal from "../../components/manage-bookings/BookingDetailsModal"
 import FeedbackModal from "../../components/BookingFeedbackModal"
-import AddBookingModal from "../../components/manage-bookings/AddBookingModal"
+import AddBookingModal from "../../components/manage-bookings/AdminBookingModal"
 
 const Bookings = () => {
   const [currentPage, setCurrentPage] = useState(dayjs().month())
@@ -26,7 +26,8 @@ const Bookings = () => {
 
   // Filter states
   const [selectedEmployee, setSelectedEmployee] = useState("")
-  const employeesList = ["Yuli", "Isni", "Dini"]
+  const [employeesList, setEmployeeList] = useState([])
+
   const [selectedStatus, setSelectedStatus] = useState("")
   const [selectedDate, setSelectedDate] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
@@ -77,6 +78,30 @@ const Bookings = () => {
 
     return () => unsubscribe()
   }, [currentPage])
+
+  // Fetch available employees
+  useEffect(() => {
+    fetchAvailableEmployees()
+  }, [])
+
+  const fetchAvailableEmployees = async () => {
+  try {
+    const employeeQuery = query(collection(db, "users"), where("role", "==", "employee"))
+    const employeeSnapshot = await getDocs(employeeQuery)
+
+    const employees = employeeSnapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        name: data.fullName,
+        isActive: data.isActive ?? false  // fallback ke false jika tidak ada
+      }
+    })
+
+    setEmployeeList(employees)
+  } catch (error) {
+    console.error("Error fetching employees: ", error)
+  }
+}
 
   // Calculate status counts
   useEffect(() => {

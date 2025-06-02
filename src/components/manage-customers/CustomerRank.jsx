@@ -1,29 +1,57 @@
+import { Crown, Star, Zap } from "lucide-react"
+
 const CustomerRank = ({ totalBooks }) => {
-  const rankClasses = {
-    Bronze: "bg-amber-600/20 text-amber-800 border border-amber-600",
-    Silver: "bg-gray-300/20 text-gray-700 border border-gray-400",
-    Gold: "bg-yellow-300/20 text-yellow-700 border border-yellow-400",
-    Platinum: "bg-blue-100/30 text-blue-700 border border-blue-400",
-    Diamond: "bg-gradient-to-r from-purple-400/20 to-blue-400/20 text-purple-700 border border-purple-400",
+  const getRank = (bookingCount) => {
+    if (bookingCount >= 100) return "Diamond"
+    if (bookingCount >= 50) return "Platinum"
+    if (bookingCount >= 25) return "Gold"
+    if (bookingCount >= 10) return "Silver"
+    return "Bronze"
   }
 
-  const rank =
-    totalBooks >= 100
-      ? "Diamond"
-      : totalBooks >= 50
-        ? "Platinum"
-        : totalBooks >= 25
-          ? "Gold"
-          : totalBooks >= 10
-            ? "Silver"
-            : "Bronze"
+  const getRankColor = (rank) => {
+    switch (rank) {
+      case "Diamond":
+        return "from-blue-400 to-purple-600"
+      case "Platinum":
+        return "from-slate-300 to-slate-500"
+      case "Gold":
+        return "from-yellow-400 to-yellow-600"
+      case "Silver":
+        return "from-gray-400 to-gray-600"
+      case "Bronze":
+        return "from-amber-600 to-amber-800"
+      default:
+        return "from-gray-400 to-gray-600"
+    }
+  }
+
+  const getRankIcon = (rank) => {
+    switch (rank) {
+      case "Diamond":
+        return <Zap className="w-3 h-3" />
+      case "Platinum":
+      case "Gold":
+        return <Crown className="w-3 h-3" />
+      case "Silver":
+      case "Bronze":
+        return <Star className="w-3 h-3" />
+      default:
+        return <Star className="w-3 h-3" />
+    }
+  }
+
+  const rank = getRank(totalBooks)
+  const colorClass = getRankColor(rank)
+  const icon = getRankIcon(rank)
 
   return (
-    <span
-      className={`px-2 py-1 rounded-full text-xs font-semibold ${rankClasses[rank] || "bg-gray-100 text-gray-700"}`}
+    <div
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white bg-gradient-to-r ${colorClass}`}
     >
-      {rank} Member
-    </span>
+      {icon}
+      <span>{rank}</span>
+    </div>
   )
 }
 

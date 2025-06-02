@@ -48,7 +48,7 @@ const CustomerFilters = ({ onSearch, onFilter }) => {
           </div>
           <input
             type="text"
-            placeholder="Search customers..."
+            placeholder="Search customers by name, email, or phone..."
             value={searchTerm}
             onChange={handleSearchChange}
             className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-transparent"
@@ -57,10 +57,13 @@ const CustomerFilters = ({ onSearch, onFilter }) => {
         <div className="relative">
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg flex items-center space-x-2 hover:bg-gray-50"
+            className="px-4 py-2 bg-white border border-gray-300 rounded-lg flex items-center space-x-2 hover:bg-gray-50 transition-colors"
           >
             <FunnelIcon className="h-5 w-5 text-gray-500" />
             <span>Filter</span>
+            {(filters.rank || filters.minBookings || filters.maxBookings) && (
+              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+            )}
           </button>
 
           {isFilterOpen && (
@@ -82,11 +85,11 @@ const CustomerFilters = ({ onSearch, onFilter }) => {
                     className="w-full border border-gray-300 rounded-md p-2 focus:ring-purple-500 focus:border-purple-500"
                   >
                     <option value="">All Ranks</option>
-                    <option value="Bronze">Bronze</option>
-                    <option value="Silver">Silver</option>
-                    <option value="Gold">Gold</option>
-                    <option value="Platinum">Platinum</option>
-                    <option value="Diamond">Diamond</option>
+                    <option value="Bronze">Bronze (0-9 bookings)</option>
+                    <option value="Silver">Silver (10-24 bookings)</option>
+                    <option value="Gold">Gold (25-49 bookings)</option>
+                    <option value="Platinum">Platinum (50-99 bookings)</option>
+                    <option value="Diamond">Diamond (100+ bookings)</option>
                   </select>
                 </div>
 
@@ -100,6 +103,7 @@ const CustomerFilters = ({ onSearch, onFilter }) => {
                       onChange={handleFilterChange}
                       className="w-full border border-gray-300 rounded-md p-2 focus:ring-purple-500 focus:border-purple-500"
                       min="0"
+                      placeholder="0"
                     />
                   </div>
                   <div>
@@ -111,6 +115,7 @@ const CustomerFilters = ({ onSearch, onFilter }) => {
                       onChange={handleFilterChange}
                       className="w-full border border-gray-300 rounded-md p-2 focus:ring-purple-500 focus:border-purple-500"
                       min="0"
+                      placeholder="∞"
                     />
                   </div>
                 </div>
@@ -118,13 +123,13 @@ const CustomerFilters = ({ onSearch, onFilter }) => {
                 <div className="flex justify-end space-x-2 pt-2">
                   <button
                     onClick={resetFilters}
-                    className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+                    className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     Reset
                   </button>
                   <button
                     onClick={applyFilters}
-                    className="px-3 py-1.5 bg-purple-600 text-white rounded-md text-sm hover:bg-purple-700"
+                    className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md text-sm hover:from-purple-700 hover:to-pink-700 transition-colors"
                   >
                     Apply
                   </button>

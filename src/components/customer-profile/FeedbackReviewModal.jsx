@@ -5,7 +5,7 @@ import { Star, X, Check, MessageSquare } from 'lucide-react'
 import { doc, updateDoc } from "firebase/firestore"
 import { db } from "../../firebase"
 
-const FeedbackReviewModal = ({ isOpen, onClose, booking, onReviewSubmitted }) => {
+const FeedbackReviewModal = ({ isOpen, onClose, booking, onReviewSubmitted, bookingCount }) => {
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [comment, setComment] = useState("")
@@ -28,7 +28,8 @@ const FeedbackReviewModal = ({ isOpen, onClose, booking, onReviewSubmitted }) =>
           rating,
           comment,
           createdAt: new Date()
-        }
+        },
+        bookingCount: bookingCount
       })
       
       setIsSuccess(true)

@@ -41,7 +41,7 @@ const CustomerDetailModal = ({ isOpen, onClose, customer }) => {
                   </Dialog.Title>
                   <button
                     onClick={onClose}
-                    className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors"
                   >
                     <XMarkIcon className="h-5 w-5 text-gray-500" />
                   </button>
@@ -49,7 +49,7 @@ const CustomerDetailModal = ({ isOpen, onClose, customer }) => {
 
                 <div className="mt-6">
                   <div className="flex items-center mb-6">
-                    <div className="h-16 w-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xl font-bold mr-4">
+                    <div className="h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl font-bold mr-4">
                       {customer.fullName?.charAt(0) || "?"}
                     </div>
                     <div>
@@ -103,14 +103,14 @@ const CustomerDetailModal = ({ isOpen, onClose, customer }) => {
                     </div>
                   )}
 
-                  <div className="mt-6 flex justify-between">
-                    <div>
+                  <div className="mt-6 grid grid-cols-2 gap-4">
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-lg">
                       <p className="text-sm text-gray-500">Total Bookings</p>
                       <p className="text-2xl font-bold text-purple-600">{customer.bookingCount || 0}</p>
                     </div>
-                    <div>
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-lg">
                       <p className="text-sm text-gray-500">Last Visit</p>
-                      <p className="text-gray-800">
+                      <p className="text-blue-600 font-medium">
                         {customer.lastVisit ? dayjs(customer.lastVisit).format("DD MMM YYYY") : "Never"}
                       </p>
                     </div>

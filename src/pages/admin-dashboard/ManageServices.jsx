@@ -86,7 +86,7 @@ const ManageServices = () => {
                 Service Management
               </h2>
               <p className="text-gray-500">
-                Manage your salon's service offerings
+                Manage salon's service offerings
               </p>
             </div>
 
@@ -142,7 +142,7 @@ const ManageServices = () => {
                 transition={{ duration: 0.3 }}
                 className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
               >
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-3"></div>
+                <div className="bg-gradient-to-r from-purple-300 to-pink-200 h-3"></div>
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-gray-800">

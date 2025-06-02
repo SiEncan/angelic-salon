@@ -165,8 +165,16 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
     try {
       const employeeQuery = query(collection(db, "users"), where("role", "==", "employee"))
       const employeeSnapshot = await getDocs(employeeQuery)
-      const employees = employeeSnapshot.docs.map((doc) => doc.data().fullName)
+
+      const employees = employeeSnapshot.docs.map((doc) => {
+        const data = doc.data()
+        return {
+          name: data.fullName,
+          isActive: data.isActive ?? false  // fallback ke false jika tidak ada
+        }
+      })
       setEmployeeList(employees)
+
     } catch (error) {
       console.error("Error fetching employees: ", error)
     }
@@ -309,7 +317,7 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
       return
     }
 
-    if (!isTimeInRange(time)) {
+    if (!isTimeInRange(time, services)) {
       setFeedbackModalType("failed")
       setFeedbackModalTitle("Gagal Memilih Waktu")
       setFeedbackModalDescription("Waktu booking hanya tersedia antara jam 09:00 - 17:00")
@@ -371,14 +379,28 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
     setDiscountAmount(0)
   }
 
-  const isTimeInRange = (time) => {
-    if (!time) return false
-    const [hour, minute] = time.split(":").map(Number)
-    const totalMinutes = hour * 60 + minute
-    const minMinutes = 9 * 60
-    const maxMinutes = 17 * 60
-    return totalMinutes >= minMinutes && totalMinutes <= maxMinutes
-  }
+  const isTimeInRange = (startTime, services) => {
+  if (!startTime || services.length === 0) return false;
+
+  // Calculate total duration from services
+  const totalDuration = services.reduce((sum, s) => {
+    const serviceObj = serviceOptions.find((opt) => opt.name === s);
+    return sum + (serviceObj ? serviceObj.duration : 0);
+  }, 0);
+
+  // Convert start time to total minutes
+  const [hours, minutes] = startTime.split(":").map(Number);
+  const startMinutes = hours * 60 + minutes;
+
+  // Calculate end time in minutes
+  const endMinutes = startMinutes + totalDuration;
+
+  // Salon operates from 9:00 AM (540 minutes) to 5:00 PM (1020 minutes)
+  const minMinutes = 9 * 60; // 540 minutes
+  const maxMinutes = 17 * 60; // 1020 minutes
+
+  return startMinutes >= minMinutes && endMinutes <= maxMinutes;
+};
 
   return (
     <>

@@ -63,6 +63,14 @@ export const getStatusDetails = (status) => {
         textColor: "text-red-700",
         label: "Dibatalkan",
       }
+    case "in progress":
+      return {
+        icon: <Clock className="w-4 h-4" />,
+        bgColor: "bg-purple-100",
+        textColor: "text-purple-700",
+        label: "Dalam Proses",
+      }
+      
     default:
       return {
         icon: <Clock className="w-4 h-4" />,

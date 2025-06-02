@@ -68,8 +68,8 @@ const FilterPanel = ({
               >
                 <option value="">All Employees</option>
                 {employeesList.map((employee, index) => (
-                  <option key={index} value={employee}>
-                    {employee}
+                  <option key={index} value={employee.name}>
+                    {employee.name}
                   </option>
                 ))}
               </select>

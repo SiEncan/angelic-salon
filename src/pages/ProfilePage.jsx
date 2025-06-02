@@ -55,7 +55,7 @@ const ProfilePage = () => {
       bookingsData.forEach((booking) => {
         const statusUpdatedAt = booking.updatedAt?.toDate?.()
         const isRecentlyRejected = booking.status === "rejected" && statusUpdatedAt > oneHourAgo
-        if (booking.status === "pending" || booking.status === "confirmed" || isRecentlyRejected) {
+        if (booking.status === "pending" || booking.status === "confirmed" || booking.status === "in progress" || isRecentlyRejected) {
           active.push(booking)
         } else {
           history.push(booking)
@@ -127,6 +127,7 @@ const ProfilePage = () => {
               historyBookings={historyBookings}
               setIsBookingOpen={setIsBookingOpen}
               onReviewSubmitted={() => fetchUserData(userId)}
+              bookingCount={bookingCount}
             />
 
             {/* No Bookings Message */}
