@@ -97,7 +97,7 @@ export default function ServiceCarousel() {
       </button>
 
       {/* Carousel Container */}
-      <div className="overflow-hidden min-h-[310px] pt-10 items-center z-50 mx-12" ref={containerRef}>
+      <div className="overflow-hidden min-h-[330px] md:min-h-[400px] lg:min-h-[400px] xl:min-h-[310px] pt-10 items-center z-50 mx-12" ref={containerRef}>
         <motion.div
           className="flex"
           initial={false}

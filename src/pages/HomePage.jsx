@@ -541,6 +541,24 @@ const HomePage = () => {
 function ServiceCard({ title, description, services, color }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
+  const getEmoji = (title) => {
+    switch (title) {
+      case "Facial":
+        return "✨"
+      case "Treatment":
+        return "💆‍♀️"
+      case "Nail Care":
+      case "Perawatan Kuku":
+        return "💅"
+      case "Spa Aromatherapy":
+        return "🌿"
+      case "Creambath":
+        return "💇‍♀️"
+      default:
+        return "✨"
+    }
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -553,47 +571,73 @@ function ServiceCard({ title, description, services, color }) {
       <div className={`bg-gradient-to-r ${color} p-6 text-white`}>
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-bold">{title}</h3>
-          {title === "Facial" && <span role="img" aria-label="sparkles">✨</span>}
-          {title === "Treatment" && <span role="img" aria-label="massage">💆‍♀️</span>}
-          {title === "Nail Care" && <span role="img" aria-label="nail polish">💅</span>}
-          {title === "Spa Aromatherapy" && <span role="img" aria-label="herb">🌿</span>}
-          {title === "Creambath" && <span role="img" aria-label="haircut">💇‍♀️</span>}
-          </div>
+          <span role="img" aria-label={title.toLowerCase()}>
+            {getEmoji(title)}
+          </span>
+        </div>
         <p className="mt-2 text-white text-opacity-90">{description}</p>
       </div>
 
       {/* Expandable Content */}
       <div className="p-6">
-        <motion.div
-          animate={{
-            maxHeight: isExpanded ? `${(services.length * 101)}px` : '128px',
-            opacity: isExpanded ? 1 : 0.95
-          }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="overflow-hidden relative"
-        >
-          <div className="space-y-4">
-            {services.map((service, index) => (
-              <div key={index} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
-                <h4 className="font-medium text-gray-900">{service.name}</h4>
-                <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+        <AnimatePresence mode="wait">
+          {isExpanded ? (
+            <motion.div
+              key="expanded"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="space-y-4"
+            >
+              {services.map((service, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="border-b border-gray-100 pb-3 last:border-0 last:pb-0"
+                >
+                  <h4 className="font-medium text-gray-900">{service.name}</h4>
+                  <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="collapsed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="relative overflow-hidden"
+              style={{ maxHeight: "128px" }}
+            >
+              <div className="space-y-4">
+                {services.slice(0, 2).map((service, index) => (
+                  <div key={index} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                    <h4 className="font-medium text-gray-900">{service.name}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-
-          {!isExpanded && (
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+            </motion.div>
           )}
-        </motion.div>
+        </AnimatePresence>
 
         {/* Button */}
-        <button
+        <motion.button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="mt-4 text-purple-600 font-medium text-sm flex items-center hover:text-purple-700 transition"
+          className="mt-4 text-purple-600 font-medium text-sm flex items-center hover:text-purple-700 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           {isExpanded ? "Show less" : "Show more"}
-          <ChevronDown className={`ml-1 h-4 w-4 transform transition-transform ${isExpanded ? "rotate-[-180deg]" : ""}`} />
-        </button>
+          <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.3, ease: "easeInOut" }}>
+            <ChevronDown className="ml-1 h-4 w-4" />
+          </motion.div>
+        </motion.button>
       </div>
     </motion.div>
   )
