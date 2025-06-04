@@ -64,6 +64,29 @@ app.post('/createCustomer', async (req, res) => {
   }
 });
 
+// DELETE user dari Auth dan Firestore
+app.delete('/deleteCustomer/:uid', async (req, res) => {
+  const { uid } = req.params;
+
+  if (!uid) {
+    return res.status(400).send({ message: 'UID is required' });
+  }
+
+  try {
+    // Hapus user dari Firebase Auth
+    await admin.auth().deleteUser(uid);
+
+    // Hapus user dari Firestore
+    await admin.firestore().collection('users').doc(uid).delete();
+
+    res.status(200).send({ message: 'Customer deleted successfully' });
+  } catch (error) {
+    console.error("Delete Error:", error);
+    res.status(500).send({ message: 'Error deleting customer', error: error.message });
+  }
+});
+
+
 app.listen(port, () => {
   console.log(`Backend server listening at http://localhost:${port}`);
 });

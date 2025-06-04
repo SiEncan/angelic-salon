@@ -361,7 +361,7 @@ const MainDashboard = () => {
             <div className="border-t lg:border-l border-gray-300 my-2 mt-0 2xl:mx-6" />
             <div>
               <p className="text-sm mb-0 mt-0 text-gray-500">Pending Revenue</p>
-              <p className="text-2xl font-bold text-pink-600">
+              <p className="text-2xl font-bold text-blue-600">
                 Rp{pendingRevenue.toLocaleString("id-ID")}
               </p>
             </div>
@@ -536,7 +536,7 @@ const MainDashboard = () => {
       </div>
 
       {/* Booking Status Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <div className="bg-white rounded-xl shadow-md p-4 text-center">
           <div className="text-gray-500 text-sm mb-1">Total</div>
           <div className="text-2xl font-bold text-gray-800">

@@ -103,6 +103,45 @@ const HomePage = () => {
     }
   }
 
+  const [categorizedServices, setCategorizedServices] = useState([])
+
+  useEffect(() => {
+    const fetchServicesAndCategories = async () => {
+      try {
+        // Fetch categories
+        const categoriesSnapshot = await getDocs(collection(db, "serviceCategories"))
+        const categories = categoriesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+
+        // Fetch services
+        const servicesSnapshot = await getDocs(collection(db, "services"))
+        const services = servicesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+
+        // Group services by category and sort alphabetically
+        const categorizedData = categories
+          .map((category) => ({
+            ...category,
+            services: services
+              .filter((service) => service.categoryId === category.id)
+              .sort((a, b) => a.name.localeCompare(b.name)), // Sort services alphabetically
+          }))
+          .filter((category) => category.services.length > 0) // Only show categories with services
+          .sort((a, b) => a.title.localeCompare(b.title)) // Sort categories alphabetically
+
+        setCategorizedServices(categorizedData)
+      } catch (error) {
+        console.error("Error fetching services and categories: ", error)
+      }
+    }
+
+    fetchServicesAndCategories()
+  }, [])
+
   return (
     <div className="bg-gradient-to-br from-pink-50 via-purple-50 to-pink-100 min-h-screen">
       <NavigationBar />
@@ -286,7 +325,17 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <ServiceCard
+            {categorizedServices.map((category) => (
+              <ServiceCard
+                key={category.id}
+                title={category.title}
+                description={category.description}
+                services={category.services}
+                icon={category.icon}
+                color={category.color}
+              />
+            ))}
+            {/* <ServiceCard
               title="Facial"
               description="Revitalize your skin with our specialized facial treatments"
               services={[
@@ -351,7 +400,7 @@ const HomePage = () => {
               ]}
               icon="💇‍♀️"
               color="from-yellow-500 to-amber-400"
-            />
+            /> */}
 
             <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-3xl shadow-md p-6 flex flex-col items-center justify-center text-center">
               <div className="bg-white rounded-full p-4 shadow-md mb-4">
@@ -489,7 +538,7 @@ const HomePage = () => {
   )
 }
 
-function ServiceCard({ title, description, services, icon, color }) {
+function ServiceCard({ title, description, services, color }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
@@ -504,8 +553,12 @@ function ServiceCard({ title, description, services, icon, color }) {
       <div className={`bg-gradient-to-r ${color} p-6 text-white`}>
         <div className="flex justify-between items-center">
           <h3 className="text-xl font-bold">{title}</h3>
-          <span className="text-2xl">{icon}</span>
-        </div>
+          {title === "Facial" && <span role="img" aria-label="sparkles">✨</span>}
+          {title === "Treatment" && <span role="img" aria-label="massage">💆‍♀️</span>}
+          {title === "Nail Care" && <span role="img" aria-label="nail polish">💅</span>}
+          {title === "Spa Aromatherapy" && <span role="img" aria-label="herb">🌿</span>}
+          {title === "Creambath" && <span role="img" aria-label="haircut">💇‍♀️</span>}
+          </div>
         <p className="mt-2 text-white text-opacity-90">{description}</p>
       </div>
 
@@ -513,7 +566,7 @@ function ServiceCard({ title, description, services, icon, color }) {
       <div className="p-6">
         <motion.div
           animate={{
-            maxHeight: isExpanded ? `${(services.length * 100)}px` : '128px',
+            maxHeight: isExpanded ? `${(services.length * 101)}px` : '128px',
             opacity: isExpanded ? 1 : 0.95
           }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -523,7 +576,7 @@ function ServiceCard({ title, description, services, icon, color }) {
             {services.map((service, index) => (
               <div key={index} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
                 <h4 className="font-medium text-gray-900">{service.name}</h4>
-                <p className="text-sm text-gray-600 mt-1">{service.desc}</p>
+                <p className="text-sm text-gray-600 mt-1">{service.description}</p>
               </div>
             ))}
           </div>

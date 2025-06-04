@@ -27,7 +27,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, loggedName, role }) => {
     <div
       className={`bg-gradient-to-b from-purple-600 to-pink-500 text-white w-64 fixed inset-y-0 left-0 top-0 transform ${
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      } md:translate-x-0 transition-transform duration-200 ease-in-out z-20`}
+      } lg:translate-x-0 transition-transform duration-200 ease-in-out z-20`}
     >
       <div className="flex items-center justify-center h-20 border-b border-purple-400 bg-purple-700">
         <img src={angelicLogo || "/placeholder.svg"} alt="Logo" className="h-10 w-10 rounded-full object-cover mr-2" />
@@ -49,7 +49,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, loggedName, role }) => {
           ))}
       </nav>
 
-      <div className="p-4 border-t border-purple-400 md:hidden">
+      <div className="p-4 border-t border-purple-400 lg:hidden">
         <div className="flex items-center">
           <div className="w-10 h-10 rounded-full bg-pink-100 bg-opacity-30 flex items-center justify-center text-white font-bold">
             {loggedName?.charAt(0) || "A"}
@@ -68,7 +68,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, loggedName, role }) => {
           </div>
         </div>
       </div>
-      <div className="pt-4 px-4 border-t border-purple-400 hidden md:flex">
+      <div className="pt-4 px-4 border-t border-purple-400 hidden lg:flex">
         <button
           onClick={() => {
             auth.signOut()
@@ -81,7 +81,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, loggedName, role }) => {
       </div>
       
       {isSidebarOpen && (
-      <button onClick={() => setIsSidebarOpen(false)} className="absolute top-7 right-[-2.5rem] bg-purple-500 p-1 rounded-full text-white md:hidden">
+      <button onClick={() => setIsSidebarOpen(false)} className="absolute top-7 right-[-2.5rem] bg-purple-500 p-1 rounded-full text-white lg:hidden">
         <X className="h-6 w-6" />
       </button>
       )}

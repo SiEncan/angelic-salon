@@ -5,6 +5,7 @@ import { Search, Clock, Crown, Star, Gift, Zap } from "lucide-react"
 import dayjs from "dayjs"
 import { db } from "../../firebase"
 import { collection, query, where, getDocs, addDoc, Timestamp } from "firebase/firestore"
+import CategoryServiceList from "../CategoryServiceList"
 
 // Rank configuration
 const ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond"]
@@ -83,30 +84,66 @@ const AddBookingModal = ({ isOpen, onClose, onSuccess, employeesList }) => {
   const [serviceOptions, setServiceOptions] = useState([])
   const [existingBookings, setExistingBookings] = useState([])
 
+  const [categorizedServices, setCategorizedServices] = useState([])
+
   // Get customer rank if they're registered
   const customerRank = selectedUser?.bookingCount ? getRank(selectedUser.bookingCount) : null
 
+  // const fetchServices = async () => {
+  //   try {
+  //     const querySnapshot = await getDocs(collection(db, "services"))
+  //     const servicesData = querySnapshot.docs.map((doc) => ({
+  //       id: doc.id,
+  //       ...doc.data(),
+  //     }))
+
+  //     setServiceOptions(servicesData)
+  //   } catch (error) {
+  //     console.error("Error fetching services: ", error)
+  //   }
+  // }
+
   useEffect(() => {
+    const fetchServicesAndCategories = async () => {
+      try {
+        // Fetch categories
+        const categoriesSnapshot = await getDocs(collection(db, "serviceCategories"))
+        const categories = categoriesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+
+        // Fetch services
+        const servicesSnapshot = await getDocs(collection(db, "services"))
+        const services = servicesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+
+        // Group services by category and sort alphabetically
+        const categorizedData = categories
+          .map((category) => ({
+            ...category,
+            services: services
+              .filter((service) => service.categoryId === category.id)
+              .sort((a, b) => a.name.localeCompare(b.name)), // Sort services alphabetically
+          }))
+          .filter((category) => category.services.length > 0) // Only show categories with services
+          .sort((a, b) => a.title.localeCompare(b.title)) // Sort categories alphabetically
+
+        setCategorizedServices(categorizedData)
+        setServiceOptions(services) // Keep flat array for calculations
+      } catch (error) {
+        console.error("Error fetching services and categories: ", error)
+      }
+    }
+
     if (isOpen) {
-      fetchServices()
+      fetchServicesAndCategories()
     } else {
       resetForm()
     }
   }, [isOpen])
-
-  const fetchServices = async () => {
-    try {
-      const querySnapshot = await getDocs(collection(db, "services"))
-      const servicesData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
-
-      setServiceOptions(servicesData)
-    } catch (error) {
-      console.error("Error fetching services: ", error)
-    }
-  }
 
   const handleDateChange = (e) => {
     const selectedDate = dayjs(e.target.value).format("YYYY-MM-DD")
@@ -432,6 +469,7 @@ const AddBookingModal = ({ isOpen, onClose, onSuccess, employeesList }) => {
                 <input
                   type="text"
                   placeholder="Type customer name..."
+                  name="fullName"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -475,6 +513,7 @@ const AddBookingModal = ({ isOpen, onClose, onSuccess, employeesList }) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
               <input
                 type="text"
+                name="phone"
                 placeholder="0812345678"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -507,37 +546,11 @@ const AddBookingModal = ({ isOpen, onClose, onSuccess, employeesList }) => {
               </div>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Services</label>
-              <div className="max-h-[180px] overflow-y-auto pr-1 space-y-2 relative border border-gray-200 rounded-lg p-2">
-                
-                {serviceOptions.map((service) => (
-                  <button
-                    key={service.id}
-                    onClick={() => handleServiceChange(service.name)}
-                    className={`px-3 w-full text-left py-2 border rounded-lg ${
-                      services.includes(service.name)
-                        ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md"
-                        : "bg-gray-100 hover:bg-gray-200 text-gray-800"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span>{service.name}</span>
-                      <span>
-                        Rp
-                        {Number(service.price).toLocaleString("id-ID")}
-                      </span>
-                    </div>
-                    {service.duration && (
-                      <div className="text-xs mt-1 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{service.duration} min</span>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <CategoryServiceList
+              categorizedServices={categorizedServices}
+              selectedServices={services}
+              onServiceChange={handleServiceChange}
+            />
 
             {totalPrice > 0 && (
               <div className="bg-gray-50 p-3 rounded-lg mb-4">

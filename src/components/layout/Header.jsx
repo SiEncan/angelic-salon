@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Bars3Icon, BellIcon } from "@heroicons/react/24/outline"
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion"
-import { Clock, Calendar, User, X, Check, XCircle, Scissors } from "lucide-react"
+import { Clock, Calendar, User, X, Check, XCircle, Scissors, UserPlus, HomeIcon, ClipboardListIcon, UsersIcon, BriefcaseIcon } from "lucide-react"
 import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, Timestamp } from "firebase/firestore"
 import { db } from "../../firebase"
 import dayjs from "dayjs"
@@ -221,14 +221,21 @@ const Header = ({ isSidebarOpen, setIsSidebarOpen, loggedName, pageTitle }) => {
 
   return (
     <header className="w-full">
-      <div className="relative md:z-auto z-10 items-center justify-between flex h-16 bg-white shadow px-4">
+      <div className="relative lg:z-auto z-10 items-center justify-between flex h-16 bg-white shadow px-4">
         {/* Left side */}
         <div className="flex">
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="focus:outline-none md:hidden">
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="focus:outline-none lg:hidden">
             <Bars3Icon className="h-6 w-6" />
           </button>
-
-          <h2 className="text-lg sm:text-xl font-bold ml-4 mt-1.5 text-gray-700">{pageTitle}</h2>
+          <div className="flex items-center ml-5">
+            {pageTitle === "Dashboard" && <HomeIcon className="w-5 h-5 text-purple-600" />}
+            {pageTitle === "Bookings" && <ClipboardListIcon className="w-5 h-5 text-purple-600" />}
+            {pageTitle === "Manage Customers" && <UsersIcon className="w-5 h-5 text-purple-600" />}
+            {pageTitle === "Manage Services" && <Scissors className="w-5 h-5 text-purple-600" />}
+            {pageTitle === "Manage Employee" && <BriefcaseIcon className="w-5 h-5 text-purple-600" />}
+            {pageTitle === "Add Customer" && <UserPlus className="w-5 h-5 text-purple-600" />}
+          </div>
+          <h2 className="text-lg sm:text-xl font-bold ml-2 mt-[6px] text-gray-700">{pageTitle}</h2>
         </div>
 
         {/* Right side */}
@@ -409,7 +416,7 @@ const Header = ({ isSidebarOpen, setIsSidebarOpen, loggedName, pageTitle }) => {
           </div>
 
           {/* User Profile */}
-          <div className="hidden md:flex items-center">
+          <div className="hidden lg:flex items-center">
             <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold mr-2">
               {loggedName?.charAt(0) || "A"}
             </div>

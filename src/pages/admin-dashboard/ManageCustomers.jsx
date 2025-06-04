@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { db } from "../../firebase"
-import { collection, query, onSnapshot, where, doc, updateDoc, deleteDoc, getDocs, orderBy } from "firebase/firestore"
+import { collection, query, onSnapshot, where, doc, updateDoc, getDocs, orderBy } from "firebase/firestore"
 import { UserPlusIcon } from "@heroicons/react/24/outline"
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion"
@@ -254,30 +254,44 @@ const ManageCustomers = () => {
     }
   }
 
-  const handleConfirmDelete = async (customerId) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleConfirmDelete = async (uid, name) => {
+    setIsDeleting(true);
+
     try {
-      const customerToDelete = allCustomers.find((c) => c.id === customerId)
-      await deleteDoc(doc(db, "users", customerId))
+      const res = await fetch(`https://backend-angelic-salon.onrender.com/deleteCustomer/${uid}`, {
+        method: 'DELETE',
+      });
 
-      setFeedbackModal({
-        isOpen: true,
-        type: "success",
-        title: "Customer Deleted",
-        description: `${customerToDelete?.fullName || "Customer"} has been successfully deleted.`,
-      })
+      const result = await res.json();
 
-      setIsDeleteModalOpen(false)
-    } catch (error) {
-      console.error("Error deleting customer:", error)
+      if (res.ok) {
+        // Tampilkan feedback modal
+        setFeedbackModal({
+          isOpen: true,
+          type: "success",
+          title: "Customer Deleted",
+          description: `Customer ${name} has been successfully deleted.`,
+        });
+      } else {
+        throw new Error(result.message);
+      }
 
+    } catch (err) {
+      console.error("Delete failed:", err);
       setFeedbackModal({
         isOpen: true,
         type: "error",
         title: "Delete Failed",
-        description: "There was an error deleting the customer. Please try again.",
-      })
+        description: err.message || "Failed to delete customer.",
+      });
+    } finally {
+      setIsDeleteModalOpen(false);
+      setIsDeleting(false);
     }
-  }
+  };
+
 
   const handleAddCustomer = () => {
     navigate("/admin-dashboard/add-customer")
@@ -411,8 +425,12 @@ const ManageCustomers = () => {
         description={feedbackModal.description}
         onClose={closeFeedbackModal}
       />
+      {/* Loading Modal */}
+      <LoadingModal isOpen={isDeleting} />
     </>
   )
 }
 
 export default ManageCustomers
+
+import LoadingModal from "../../components/LoadingModal"

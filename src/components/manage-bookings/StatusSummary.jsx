@@ -2,7 +2,7 @@ import { Clock, CheckCircle, XCircle, X } from "lucide-react"
 
 const StatusSummary = ( {statusCounts} ) => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
       <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-500">Pending For Approval</p>

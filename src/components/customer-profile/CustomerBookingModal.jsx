@@ -8,7 +8,8 @@ import dayjs from "dayjs"
 
 import EmployeeSelection from "../EmployeeSelection"
 import FeedbackModal from "../BookingFeedbackModal"
-import ServiceList from "../ServiceList"
+import CategoryServiceList from "../CategoryServiceList"
+// import ServiceList from "../ServiceList"
 
 const ranks = ["Bronze", "Silver", "Gold", "Platinum", "Diamond"]
 const thresholds = [0, 10, 25, 50, 100]
@@ -111,6 +112,7 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
   const [originalPrice, setOriginalPrice] = useState(0)
   const [discountAmount, setDiscountAmount] = useState(0)
   const [selectedEmployee, setSelectedEmployee] = useState(null)
+  const [categorizedServices, setCategorizedServices] = useState([])
   const [serviceOptions, setServiceOptions] = useState([])
   const [existingBookings, setExistingBookings] = useState([])
   const [employeeList, setEmployeeList] = useState([])
@@ -125,22 +127,44 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
   }, [date, time, services])
 
   useEffect(() => {
-    const fetchServices = async () => {
+    const fetchServicesAndCategories = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "services"))
-        const servicesData = querySnapshot.docs.map((doc) => ({
+        // Fetch categories
+        const categoriesSnapshot = await getDocs(collection(db, "serviceCategories"))
+        const categories = categoriesSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }))
 
-        setServiceOptions(servicesData)
+        // Fetch services
+        const servicesSnapshot = await getDocs(collection(db, "services"))
+        const services = servicesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+
+        // Group services by category and sort alphabetically
+        const categorizedData = categories
+          .map((category) => ({
+            ...category,
+            services: services
+              .filter((service) => service.categoryId === category.id)
+              .sort((a, b) => a.name.localeCompare(b.name)), // Sort services alphabetically
+          }))
+          .filter((category) => category.services.length > 0) // Only show categories with services
+          .sort((a, b) => a.title.localeCompare(b.title)) // Sort categories alphabetically
+
+        setCategorizedServices(categorizedData)
+        setServiceOptions(services) // Keep flat array for calculations
       } catch (error) {
-        console.error("Error fetching services: ", error)
+        console.error("Error fetching services and categories: ", error)
       }
     }
 
-    fetchServices()
-  }, [])
+    if (isOpen) {
+      fetchServicesAndCategories()
+    }
+  }, [isOpen])
 
   const handleDateChange = (e) => {
     const selectedDate = dayjs(e.target.value).format("YYYY-MM-DD")
@@ -170,11 +194,10 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
         const data = doc.data()
         return {
           name: data.fullName,
-          isActive: data.isActive ?? false  // fallback ke false jika tidak ada
+          isActive: data.isActive ?? false,
         }
       })
       setEmployeeList(employees)
-
     } catch (error) {
       console.error("Error fetching employees: ", error)
     }
@@ -207,56 +230,49 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
 
     switch (rank) {
       case "Bronze":
-        // 5% off first service (assuming this means first booking ever)
         if (isFirstBooking || (profile?.bookingCount || 0) === 0) {
           discount = originalPrice * 0.05
         }
         break
 
       case "Silver":
-        // 5% discount on weekdays (Mon-Fri)
         if (date) {
-          const dayOfWeek = dayjs(date).day() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+          const dayOfWeek = dayjs(date).day()
           if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-            // Monday to Friday
             discount = originalPrice * 0.05
           }
         }
         break
 
-      case "Gold":
-        {
-        let goldDiscount = 0;
-        
-        // 5% weekday discount (sama seperti Silver)
+      case "Gold": {
+        let goldDiscount = 0
+
         if (date) {
-          const dayOfWeek = dayjs(date).day();
+          const dayOfWeek = dayjs(date).day()
           if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-            goldDiscount += originalPrice * 0.05;
+            goldDiscount += originalPrice * 0.05
           }
         }
-        
-        // + 5% discount on selected services
-        const goldSelectedServices = ["Menicure", "Pedicure"];
-        const eligibleServices = services.filter((service) => goldSelectedServices.includes(service));
+
+        const goldSelectedServices = ["Menicure", "Pedicure"]
+        const eligibleServices = services.filter((service) => goldSelectedServices.includes(service))
         if (eligibleServices.length > 0) {
           const eligiblePrice = eligibleServices.reduce((sum, service) => {
-            const serviceObj = serviceOptions.find((opt) => opt.name === service);
-            return sum + (serviceObj ? serviceObj.price : 0);
-          }, 0);
-          goldDiscount += eligiblePrice * 0.05;
+            const serviceObj = serviceOptions.find((opt) => opt.name === service)
+            return sum + (serviceObj ? serviceObj.price : 0)
+          }, 0)
+          goldDiscount += eligiblePrice * 0.05
         }
-        
-        discount = goldDiscount;
-        break }
+
+        discount = goldDiscount
+        break
+      }
 
       case "Platinum":
-        // 10% discount on all services
         discount = originalPrice * 0.1
         break
 
       case "Diamond":
-        // 15% discount + VIP treatment
         discount = originalPrice * 0.15
         break
 
@@ -336,7 +352,7 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
         services,
         totalPrice,
         employeeName: selectedEmployee,
-        status: "pending", // Initial status is pending, waiting for admin approval
+        status: "pending",
         createdAt: Timestamp.now(),
       }
 
@@ -380,27 +396,22 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
   }
 
   const isTimeInRange = (startTime, services) => {
-  if (!startTime || services.length === 0) return false;
+    if (!startTime || services.length === 0) return false
 
-  // Calculate total duration from services
-  const totalDuration = services.reduce((sum, s) => {
-    const serviceObj = serviceOptions.find((opt) => opt.name === s);
-    return sum + (serviceObj ? serviceObj.duration : 0);
-  }, 0);
+    const totalDuration = services.reduce((sum, s) => {
+      const serviceObj = serviceOptions.find((opt) => opt.name === s)
+      return sum + (serviceObj ? serviceObj.duration : 0)
+    }, 0)
 
-  // Convert start time to total minutes
-  const [hours, minutes] = startTime.split(":").map(Number);
-  const startMinutes = hours * 60 + minutes;
+    const [hours, minutes] = startTime.split(":").map(Number)
+    const startMinutes = hours * 60 + minutes
+    const endMinutes = startMinutes + totalDuration
 
-  // Calculate end time in minutes
-  const endMinutes = startMinutes + totalDuration;
+    const minMinutes = 9 * 60
+    const maxMinutes = 17 * 60
 
-  // Salon operates from 9:00 AM (540 minutes) to 5:00 PM (1020 minutes)
-  const minMinutes = 9 * 60; // 540 minutes
-  const maxMinutes = 17 * 60; // 1020 minutes
-
-  return startMinutes >= minMinutes && endMinutes <= maxMinutes;
-};
+    return startMinutes >= minMinutes && endMinutes <= maxMinutes
+  }
 
   return (
     <>
@@ -470,11 +481,6 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
                       </div>
                     )}
                   </div>
-
-                  {/* Modal Header */}
-                  {/* <div className="bg-white p-4 border-b">
-                    <h2 className="text-xl font-bold text-gray-800">Book Your Appointment</h2>
-                  </div> */}
                 </div>
 
                 <div className="overflow-y-auto p-4 flex-grow">
@@ -542,15 +548,14 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
                       </div>
                     </div>
 
-                    <ServiceList
-                      serviceOptions={serviceOptions}
-                      services={services}
-                      handleServiceChange={handleServiceChange}
+                    <CategoryServiceList
+                      categorizedServices={categorizedServices}
+                      selectedServices={services}
+                      onServiceChange={handleServiceChange}
                     />
 
                     {totalPrice > 0 && (
                       <div className="bg-gray-50 p-3 rounded-lg">
-                        {/* Show original price and discount if there's a discount */}
                         {discountAmount > 0 && (
                           <div className="space-y-1 mb-2">
                             <div className="flex justify-between items-center text-sm">

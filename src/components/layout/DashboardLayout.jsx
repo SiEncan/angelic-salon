@@ -82,7 +82,7 @@ const DashboardLayout = () => {
         role={userData.role}
       />
 
-      <div className="flex-1 flex flex-col md:ml-64 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:ml-64 overflow-hidden">
         <Header
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={toggleSidebar}
