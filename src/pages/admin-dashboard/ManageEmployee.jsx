@@ -43,8 +43,7 @@ const ManageEmployee = () => {
     fullName: "",
     email: "",
     phone: "",
-    specialization: "",
-    workingHours: "09:00-17:00",
+    address: "",
     isActive: true,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -218,8 +217,7 @@ const ManageEmployee = () => {
       fullName: "",
       email: "",
       phone: "",
-      specialization: "",
-      workingHours: "09:00-17:00",
+      address: "",
       isActive: true,
     })
     setFormError("")
@@ -233,8 +231,7 @@ const ManageEmployee = () => {
       fullName: employee.fullName || "",
       email: employee.email || "",
       phone: employee.phone || "",
-      specialization: employee.specialization || "",
-      workingHours: employee.workingHours || "09:00-17:00",
+      address: employee.address || "",
       isActive: employee.isActive !== false, // Default to true if not specified
     })
     setFormError("")
@@ -271,8 +268,7 @@ const ManageEmployee = () => {
         fullName: "",
         email: "",
         phone: "",
-        specialization: "",
-        workingHours: "09:00-17:00",
+        address: "",
         isActive: true,
       })
     } catch (error) {
@@ -380,13 +376,13 @@ const ManageEmployee = () => {
                   Employee
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
+                  Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Specialization
+                  Phone Number
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Working Hours
+                  Address
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -416,19 +412,12 @@ const ManageEmployee = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{employee.email}</div>
-                      <div className="text-sm text-gray-500">{employee.phone || "No phone"}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {employee.specialization ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                          {employee.specialization}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-gray-500">Not specified</span>
-                      )}
+                      <div className="text-sm text-gray-500">{employee.phone || "No phone"}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {employee.workingHours || "09:00-17:00"}
+                      {employee.address || "No address provided"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {employee.isActive !== false ? (
@@ -682,6 +671,7 @@ const ManageEmployee = () => {
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           required
+                          placeholder="(e.g. John Doe)"
                         />
                       </div>
 
@@ -694,6 +684,7 @@ const ManageEmployee = () => {
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           required
+                          placeholder="(e.g. YxRyO@example.com)"
                         />
                       </div>
 
@@ -705,30 +696,19 @@ const ManageEmployee = () => {
                           value={formData.phone}
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          placeholder="(e.g. +1 234 567 8900)"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                         <input
                           type="text"
-                          name="specialization"
-                          value={formData.specialization}
+                          name="address"
+                          value={formData.address}
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="e.g. Hair Stylist, Nail Technician"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Working Hours</label>
-                        <input
-                          type="text"
-                          name="workingHours"
-                          value={formData.workingHours}
-                          onChange={handleInputChange}
-                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="e.g. 09:00-17:00"
+                          placeholder="(e.g. 123 Main St, City, State, Zip)"
                         />
                       </div>
 
@@ -832,6 +812,7 @@ const ManageEmployee = () => {
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           required
+                          placeholder="(e.g. John Doe)"
                         />
                       </div>
 
@@ -844,6 +825,7 @@ const ManageEmployee = () => {
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           required
+                          placeholder="(e.g. 1h5o9@example.com)"
                         />
                       </div>
 
@@ -855,30 +837,19 @@ const ManageEmployee = () => {
                           value={formData.phone}
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          placeholder="(e.g. 123-456-7890)"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                         <input
                           type="text"
-                          name="specialization"
-                          value={formData.specialization}
+                          name="address"
+                          value={formData.address}
                           onChange={handleInputChange}
                           className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="e.g. Hair Stylist, Nail Technician"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Working Hours</label>
-                        <input
-                          type="text"
-                          name="workingHours"
-                          value={formData.workingHours}
-                          onChange={handleInputChange}
-                          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          placeholder="e.g. 09:00-17:00"
+                          placeholder="(e.g. 123 Main St, City, State, Zip)"
                         />
                       </div>
 
