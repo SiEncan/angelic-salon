@@ -120,11 +120,6 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
   const today = new Date().toISOString().split("T")[0]
 
   const employeeSectionRef = useRef(null)
-  useEffect(() => {
-    if (date && time && services.length > 0 && employeeSectionRef.current) {
-      employeeSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
-  }, [date, time, services])
 
   useEffect(() => {
     const fetchServicesAndCategories = async () => {
