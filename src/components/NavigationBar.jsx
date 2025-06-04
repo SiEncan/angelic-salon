@@ -171,7 +171,7 @@ function NavigationBar() {
                       Profile
                     </Link>
                   )}
-                  {userRole === "admin" && (
+                  {(userRole === "admin" || userRole === "owner") && (
                     <Link
                       to="/admin-dashboard"
                       className="text-gray-700 font-medium transition duration-150 hover:text-pink-500 no-underline"
