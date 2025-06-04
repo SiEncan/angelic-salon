@@ -170,7 +170,13 @@ const CustomerBookingButton = ({ userId, profile, isOpen, setIsOpen, onBookingSu
 
   const fetchBookings = async (selectedDate) => {
     try {
-      const querySnapshot = await getDocs(query(collection(db, "bookings"), where("date", "==", selectedDate)))
+      const querySnapshot = await getDocs(
+        query(
+          collection(db, "bookings"),
+          where("date", "==", selectedDate),
+          where("status", "in", ["pending", "in progress", "confirmed"])
+        )
+      )
       const bookings = querySnapshot.docs.map((doc) => doc.data())
       setExistingBookings(bookings)
 

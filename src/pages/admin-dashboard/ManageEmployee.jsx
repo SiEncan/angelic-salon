@@ -27,6 +27,7 @@ import {
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion"
 import dayjs from "dayjs"
+import FeedbackModal  from "../../components/BookingFeedbackModal"
 
 const ManageEmployee = () => {
   // Status filters
@@ -53,6 +54,11 @@ const ManageEmployee = () => {
   const [currentPage, setCurrentPage] = useState(dayjs().month())
   const [employeeData, setEmployeeData] = useState({})
   const [isLoading, setIsLoading] = useState(true)
+
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackModalType, setFeedbackModalType] = useState("");  // "success" or "failed"
+  const [feedbackModalTitle, setFeedbackModalTitle] = useState("");
+  const [feedbackModalDescription, setFeedbackModalDescription] = useState("");
 
   // Modal refs for click outside
   const addModalRef = useRef(null)
@@ -271,9 +277,18 @@ const ManageEmployee = () => {
         address: "",
         isActive: true,
       })
+
+      setFeedbackModalType("success")
+      setFeedbackModalTitle("Employee Added")
+      setFeedbackModalDescription("New employee has been successfully added.")
+      setIsFeedbackModalOpen(true)
+
     } catch (error) {
       console.error("Error adding employee:", error)
-      setFormError("Failed to add employee. Please try again.")
+      setFeedbackModalType("failed")
+      setFeedbackModalTitle("Employee Addition Failed")
+      setFeedbackModalDescription("Failed to add employee. Please try again.")
+      setIsFeedbackModalOpen(true)
     } finally {
       setIsSubmitting(false)
     }
@@ -299,9 +314,19 @@ const ManageEmployee = () => {
       })
 
       setIsEditModalOpen(false)
+
+      setFeedbackModalType("success")
+      setFeedbackModalTitle("Employee Updated")
+      setFeedbackModalDescription("Employee has been successfully updated.")
+      setIsFeedbackModalOpen(true)
     } catch (error) {
+
       console.error("Error updating employee:", error)
-      setFormError("Failed to update employee. Please try again.")
+      setFeedbackModalType("failed")
+      setFeedbackModalTitle("Employee Update Failed")
+      setFeedbackModalDescription("Failed to update employee. Please try again.")
+
+      setIsFeedbackModalOpen(true)
     } finally {
       setIsSubmitting(false)
     }
@@ -316,9 +341,18 @@ const ManageEmployee = () => {
       await deleteDoc(employeeRef)
 
       setIsDeleteModalOpen(false)
+
+      setFeedbackModalType("success")
+      setFeedbackModalTitle("Employee Deleted")
+      setFeedbackModalDescription("Employee has been successfully deleted.")
+      setIsFeedbackModalOpen(true)
+
     } catch (error) {
       console.error("Error deleting employee:", error)
-      setFormError("Failed to delete employee. Please try again.")
+      setFeedbackModalType("failed")
+      setFeedbackModalTitle("Employee Deletion Failed")
+      setFeedbackModalDescription("Failed to delete employee. Please try again.")
+      setIsFeedbackModalOpen(true)
     } finally {
       setIsSubmitting(false)
     }
@@ -979,6 +1013,15 @@ const ManageEmployee = () => {
           </>
         )}
       </AnimatePresence>
+
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        type={feedbackModalType}
+        title={feedbackModalTitle}
+        description={feedbackModalDescription}
+        onClose={() => setIsFeedbackModalOpen(false)}
+      />
+
     </div>
   )
 }
