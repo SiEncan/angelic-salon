@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useRef } from "react"
 import {
   ChevronLeftIcon,
@@ -11,6 +13,7 @@ import {
   PencilIcon,
   TrashIcon,
   XMarkIcon,
+  StarIcon,
 } from "@heroicons/react/24/outline"
 import { db } from "../../firebase"
 import {
@@ -23,11 +26,13 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  getDocs,
 } from "firebase/firestore"
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion"
 import dayjs from "dayjs"
-import FeedbackModal  from "../../components/BookingFeedbackModal"
+import FeedbackModal from "../../components/BookingFeedbackModal"
+import EmployeePerformanceCard from "../../components/manage-employee/employee-performance-card"
 
 const ManageEmployee = () => {
   // Status filters
@@ -53,12 +58,13 @@ const ManageEmployee = () => {
   // Performance tracking state
   const [currentPage, setCurrentPage] = useState(dayjs().month())
   const [employeeData, setEmployeeData] = useState({})
+  const [employeeRatings, setEmployeeRatings] = useState({})
   const [isLoading, setIsLoading] = useState(true)
 
-  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
-  const [feedbackModalType, setFeedbackModalType] = useState("");  // "success" or "failed"
-  const [feedbackModalTitle, setFeedbackModalTitle] = useState("");
-  const [feedbackModalDescription, setFeedbackModalDescription] = useState("");
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false)
+  const [feedbackModalType, setFeedbackModalType] = useState("") // "success" or "failed"
+  const [feedbackModalTitle, setFeedbackModalTitle] = useState("")
+  const [feedbackModalDescription, setFeedbackModalDescription] = useState("")
 
   // Modal refs for click outside
   const addModalRef = useRef(null)
@@ -83,8 +89,8 @@ const ManageEmployee = () => {
   // Fetch employees and their booking data
   useEffect(() => {
     setIsLoading(true)
-    const monthStart = dayjs().month(currentPage).startOf("month").format("YYYY-MM-DD")
-    const monthEnd = dayjs().month(currentPage).endOf("month").format("YYYY-MM-DD")
+    const monthStart = dayjs().month(currentPage).startOf("month").toDate()
+    const monthEnd = dayjs().month(currentPage).endOf("month").toDate()
 
     const daysInMonth = Array.from({ length: dayjs().month(currentPage).daysInMonth() }, (_, i) =>
       dayjs().month(currentPage).startOf("month").add(i, "day").format("YYYY-MM-DD"),
@@ -101,8 +107,22 @@ const ManageEmployee = () => {
       setEmployees(employeesList)
 
       const employeeStats = {}
+      const employeeRatingData = {}
+
       employeesList.forEach((employee) => {
         employeeStats[employee.fullName] = {}
+        employeeRatingData[employee.fullName] = {
+          totalRating: 0,
+          ratingCount: 0,
+          ratings: {
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0,
+            5: 0,
+          },
+        }
+
         daysInMonth.forEach((date) => {
           employeeStats[employee.fullName][date] = {
             completed: 0,
@@ -113,42 +133,71 @@ const ManageEmployee = () => {
         })
       })
 
-      const bookingsQuery = query(
-        collection(db, "bookings"),
-        where("date", ">=", monthStart),
-        where("date", "<=", monthEnd),
-      )
+      // Fetch bookings for the month
+      const fetchBookingsAndRatings = async () => {
+        try {
+          const bookingsQuery = query(
+            collection(db, "bookings"),
+            where("createdAt", ">=", monthStart),
+            where("createdAt", "<=", monthEnd),
+          )
 
-      const unsubscribeBookings = onSnapshot(bookingsQuery, (querySnapshot) => {
-        const bookings = querySnapshot.docs.map((doc) => doc.data())
+          const querySnapshot = await getDocs(bookingsQuery)
+          const bookings = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
 
-        // Populate employee stats with booking data
-        bookings.forEach((booking) => {
-          const { employeeName, date, status } = booking
-          const lowerCaseStatus = status?.toLowerCase()
-          if (!employeeName || !lowerCaseStatus) return
+          // Process bookings for status counts
+          bookings.forEach((booking) => {
+            const { employeeName, date, status } = booking
+            const lowerCaseStatus = status?.toLowerCase()
+            if (!employeeName || !lowerCaseStatus) return
 
-          const bookingDate = dayjs(date).isValid()
-            ? dayjs(date).format("YYYY-MM-DD")
-            : date.toDate
-              ? dayjs(date.toDate()).format("YYYY-MM-DD")
-              : null
+            const bookingDate = dayjs(date).isValid()
+              ? dayjs(date).format("YYYY-MM-DD")
+              : date.toDate
+                ? dayjs(date.toDate()).format("YYYY-MM-DD")
+                : null
 
-          if (
-            bookingDate &&
-            employeeStats[employeeName] &&
-            employeeStats[employeeName][bookingDate] &&
-            employeeStats[employeeName][bookingDate][lowerCaseStatus] !== undefined
-          ) {
-            employeeStats[employeeName][bookingDate][lowerCaseStatus] += 1
-          }
-        })
+            if (
+              bookingDate &&
+              employeeStats[employeeName] &&
+              employeeStats[employeeName][bookingDate] &&
+              employeeStats[employeeName][bookingDate][lowerCaseStatus] !== undefined
+            ) {
+              employeeStats[employeeName][bookingDate][lowerCaseStatus] += 1
+            }
 
-        setEmployeeData(employeeStats)
-        setIsLoading(false)
-      })
+            // Process reviews and ratings
+            if (booking.review && booking.review.rating && employeeRatingData[employeeName]) {
+              const rating = Number(booking.review.rating)
+              if (rating >= 1 && rating <= 5) {
+                employeeRatingData[employeeName].totalRating += rating
+                employeeRatingData[employeeName].ratingCount += 1
+                employeeRatingData[employeeName].ratings[rating] += 1
+              }
+            }
+          })
 
-      return () => unsubscribeBookings()
+          // Calculate average ratings
+          Object.keys(employeeRatingData).forEach((name) => {
+            const { totalRating, ratingCount } = employeeRatingData[name]
+            if (ratingCount > 0) {
+              employeeRatingData[name].averageRating = (totalRating / ratingCount).toFixed(1)
+            }
+          })
+
+          setEmployeeData(employeeStats)
+          setEmployeeRatings(employeeRatingData)
+          setIsLoading(false)
+        } catch (error) {
+          console.error("Error fetching bookings and ratings:", error)
+          setIsLoading(false)
+        }
+      }
+
+      fetchBookingsAndRatings()
     })
 
     return () => unsubscribeUsers()
@@ -196,12 +245,18 @@ const ManageEmployee = () => {
         totalBookings += Object.values(statusObj).reduce((sum, count) => sum + count, 0)
       })
 
+      // Add rating data
+      const ratingData = employeeRatings[name] || { averageRating: null, ratingCount: 0 }
+
       metrics[name] = {
         totalBookings,
         completedBookings,
         confirmedBookings,
         inProgressBookings,
         cancelledBookings,
+        averageRating: ratingData.averageRating,
+        ratingCount: ratingData.ratingCount,
+        ratingDistribution: ratingData.ratings,
       }
     })
 
@@ -282,7 +337,6 @@ const ManageEmployee = () => {
       setFeedbackModalTitle("Employee Added")
       setFeedbackModalDescription("New employee has been successfully added.")
       setIsFeedbackModalOpen(true)
-
     } catch (error) {
       console.error("Error adding employee:", error)
       setFeedbackModalType("failed")
@@ -320,7 +374,6 @@ const ManageEmployee = () => {
       setFeedbackModalDescription("Employee has been successfully updated.")
       setIsFeedbackModalOpen(true)
     } catch (error) {
-
       console.error("Error updating employee:", error)
       setFeedbackModalType("failed")
       setFeedbackModalTitle("Employee Update Failed")
@@ -346,7 +399,6 @@ const ManageEmployee = () => {
       setFeedbackModalTitle("Employee Deleted")
       setFeedbackModalDescription("Employee has been successfully deleted.")
       setIsFeedbackModalOpen(true)
-
     } catch (error) {
       console.error("Error deleting employee:", error)
       setFeedbackModalType("failed")
@@ -421,6 +473,9 @@ const ManageEmployee = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rating
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -429,59 +484,76 @@ const ManageEmployee = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {employees.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan="7" className="px-6 py-4 text-center text-sm text-gray-500">
                     No employees found
                   </td>
                 </tr>
               ) : (
-                employees.map((employee) => (
-                  <tr key={employee.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                          {employee.fullName?.charAt(0) || "?"}
+                employees.map((employee) => {
+                  const rating = employeeRatings[employee.fullName]
+                  const averageRating = rating?.averageRating
+                  const ratingCount = rating?.ratingCount || 0
+
+                  return (
+                    <tr key={employee.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                            {employee.fullName?.charAt(0) || "?"}
+                          </div>
+                          <div className="text-sm font-medium text-gray-900 ml-3">{employee.fullName}</div>
                         </div>
-                        <div className="text-sm font-medium text-gray-900 ml-3">{employee.fullName}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{employee.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{employee.phone || "No phone"}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {employee.address || "No address provided"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {employee.isActive !== false ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                          Inactive
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={() => openEditModal(employee)}
-                          className="text-blue-600 hover:text-blue-900 p-1 rounded-full hover:bg-blue-100"
-                        >
-                          <PencilIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => openDeleteModal(employee)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{employee.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{employee.phone || "No phone"}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {employee.address || "No address provided"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {employee.isActive !== false ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                            Inactive
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {averageRating ? (
+                          <div className="flex items-center">
+                            <StarIcon className="h-4 w-4 text-yellow-400 fill-yellow-400 mr-1" />
+                            <span className="text-sm font-medium">{averageRating}</span>
+                            <span className="text-xs text-gray-500 ml-1">({ratingCount})</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-500">No ratings</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => openEditModal(employee)}
+                            className="text-blue-600 hover:text-blue-900 p-1 rounded-full hover:bg-blue-100"
+                          >
+                            <PencilIcon className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => openDeleteModal(employee)}
+                            className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100"
+                          >
+                            <TrashIcon className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
@@ -515,52 +587,13 @@ const ManageEmployee = () => {
       {/* Employee performance cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         {Object.entries(employeeMetrics).map(([name, metrics]) => (
-          <div
+          <EmployeePerformanceCard
             key={name}
-            className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-          >
-            <div className="bg-gradient-to-r from-purple-500 to-pink-300 h-3"></div>
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold mr-3">
-                  {name.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-800">{name}</h3>
-                  <p className="text-sm text-gray-500">
-                    {employees.find((e) => e.fullName === name)?.specialization || "Employee"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 flex items-center">
-                    <CheckCircleIcon className="h-4 w-4 text-green-500 mr-1" /> Completed
-                  </span>
-                  <span className="font-semibold text-green-600">{metrics.completedBookings}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 flex items-center">
-                    <CalendarIcon className="h-4 w-4 text-blue-500 mr-1" /> Confirmed
-                  </span>
-                  <span className="font-semibold text-blue-600">{metrics.confirmedBookings}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 flex items-center">
-                    <ClockIcon className="h-4 w-4 text-purple-500 mr-1" /> In Progress
-                  </span>
-                  <span className="font-semibold text-purple-600">{metrics.inProgressBookings}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 flex items-center">
-                    <XCircleIcon className="h-4 w-4 text-red-500 mr-1" /> Cancelled
-                  </span>
-                  <span className="font-semibold text-red-600">{metrics.cancelledBookings}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            name={name}
+            metrics={metrics}
+            employee={employees.find((e) => e.fullName === name)}
+            currentPage={currentPage}
+          />
         ))}
       </div>
 
@@ -951,15 +984,15 @@ const ManageEmployee = () => {
               className="fixed inset-0 bg-black bg-opacity-50 z-40"
             />
             <motion.div
-          initial={{ scale: 0.7, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.7, opacity: 0, y: 20 }}
-          transition={{
-            type: 'spring',
-            stiffness: 300,
-            damping: 20,
-            duration: 0.3,
-          }}
+              initial={{ scale: 0.7, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.7, opacity: 0, y: 20 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 20,
+                duration: 0.3,
+              }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
               <div ref={deleteModalRef} className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
@@ -1021,7 +1054,6 @@ const ManageEmployee = () => {
         description={feedbackModalDescription}
         onClose={() => setIsFeedbackModalOpen(false)}
       />
-
     </div>
   )
 }

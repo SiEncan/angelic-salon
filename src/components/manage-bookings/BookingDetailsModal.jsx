@@ -1,9 +1,27 @@
+import { useState } from "react"
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion"
-import { X, XCircle, Phone, Calendar, User, DollarSign, Scissors, Star, Clock, CheckCircle } from "lucide-react"
+import {
+  X,
+  XCircle,
+  Phone,
+  Calendar,
+  User,
+  DollarSign,
+  Scissors,
+  Star,
+  Clock,
+  CheckCircle,
+  Globe,
+  EyeOff,
+} from "lucide-react"
 import dayjs from "dayjs"
+import { doc, updateDoc } from "firebase/firestore"
+import { db } from "../../firebase"
 
 const BookingDetailsModal = ({ isOpen, booking, onClose }) => {
+  const [isUpdating, setIsUpdating] = useState(false)
+
   if (!isOpen || !booking) return null
 
   // Get status badge style
@@ -60,11 +78,31 @@ const BookingDetailsModal = ({ isOpen, booking, onClose }) => {
       )
     }
 
-    return (
-      <div className="flex items-center gap-1">
-        {stars}
-      </div>
-    )
+    return <div className="flex items-center gap-1">{stars}</div>
+  }
+
+  // Toggle review public status
+  const toggleReviewPublic = async (isPublic) => {
+    if (!booking.id || !booking.review) return
+
+    try {
+      setIsUpdating(true)
+
+      // Update the review's isPublic field in Firestore
+      const bookingRef = doc(db, "bookings", booking.id)
+      await updateDoc(bookingRef, {
+        "review.isPublic": isPublic,
+      })
+
+      // Update local state if needed
+      if (booking.review) {
+        booking.review.isPublic = isPublic
+      }
+    } catch (error) {
+      console.error("Error updating review visibility:", error)
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   return (
@@ -110,28 +148,30 @@ const BookingDetailsModal = ({ isOpen, booking, onClose }) => {
                   </div>
                 </div>
               </div>
-              
-              <div className={`px-3 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-md items-center gap-1.5 ${getStatusBadgeStyle(booking.status)}`}>
+
+              <div
+                className={`px-3 py-1.5 inline-flex text-sm leading-5 font-semibold rounded-md items-center gap-1.5 ${getStatusBadgeStyle(booking.status)}`}
+              >
                 <span>Status:</span>
                 <span className="mt-[1px]">{getStatusIcon(booking.status)}</span>
                 <span>
                   {booking.status === "pending"
                     ? "Pending Approval"
                     : booking.status === "confirmed"
-                    ? "Confirmed"
-                    : booking.status === "in progress"
-                    ? "In Progress" :
-                    booking.status === "completed"
-                    ? "Completed":
-                    booking.status === "rejected"
-                    ? "Rejected"
-                    : booking.status}
+                      ? "Confirmed"
+                      : booking.status === "in progress"
+                        ? "In Progress"
+                        : booking.status === "completed"
+                          ? "Completed"
+                          : booking.status === "rejected"
+                            ? "Rejected"
+                            : booking.status}
                 </span>
               </div>
             </div>
 
             <div className="mb-2 mt-1 text-xs text-gray-700 font-semibold flex items-center bg-gray-50 p-2 rounded-md">
-              Booked at: {dayjs(booking.createdAt.toDate()).format("ddd, DD MMM YYYY")}
+              Booked at: {dayjs(booking.createdAt?.toDate()).format("ddd, DD MMM YYYY")}
             </div>
 
             {/* Booking Details - Compact Grid */}
@@ -190,23 +230,50 @@ const BookingDetailsModal = ({ isOpen, booking, onClose }) => {
 
             {/* Review Section */}
             {booking.review ? (
-              <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-gray-100 p-3 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-medium text-gray-700">Customer Review</h4>
-                  <span className="text-xs text-gray-500">
+                  <h4 className="text-xs font-medium text-purple-600">Customer Review</h4>
+                  <span className="text-xs text-gray-600 p-1 rounded bg-white shadow-sm">
                     {booking.review.createdAt ? dayjs(booking.review.createdAt.toDate()).format("MMM D, YYYY") : ""}
                   </span>
                 </div>
 
                 {/* Star Rating */}
-                <div className="mb-2">{renderStarRating(booking.review.rating)}</div>
+                <div>
+                <div className="mb-3">{renderStarRating(booking.review.rating)}</div>
 
                 {/* Comment */}
                 {booking.review.comment && (
-                  <div className="p-2 rounded border border-gray-100 text-sm text-gray-700">
+                  <div className="p-2 rounded shadow-sm border-l-4 border-purple-300 text-sm text-gray-700 bg-white mb-3">
                     {booking.review.comment}
                   </div>
                 )}
+                </div>
+
+                {/* Public/Private Toggle */}
+                <div className="flex items-center justify-between mt-2 bg-white p-2 rounded-lg border border-gray-100">
+                  <div className="flex items-center gap-2">
+                    {booking.review.isPublic ? (
+                      <Globe className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    )}
+                    <span className="text-xs font-medium">
+                      {booking.review.isPublic ? "Shown on landing page" : "Hidden from landing page"}
+                    </span>
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={booking.review.isPublic || false}
+                      onChange={(e) => toggleReviewPublic(e.target.checked)}
+                      disabled={isUpdating}
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-pink-500"></div>
+                  </label>
+                </div>
               </div>
             ) : (
               <div className="bg-gray-50 p-3 rounded-lg">

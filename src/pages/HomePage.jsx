@@ -61,6 +61,7 @@ const HomePage = () => {
         query(
           collection(db, "bookings"),
           where("review", "!=", ""),
+          where("review.isPublic", "==", true),
           orderBy("createdAt", "desc"),
           limit(3)
         )

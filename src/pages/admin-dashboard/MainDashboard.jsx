@@ -500,7 +500,7 @@ const MainDashboard = () => {
                 Service Breakdown:
               </h4>
               <div className="space-y-2">
-                {serviceData.slice(0, 5).map((service, index) => (
+                {serviceData.slice(0, 10).map((service, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between"
