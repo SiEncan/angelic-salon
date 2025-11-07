@@ -3,6 +3,8 @@
 A web-based **salon & spa booking system** designed with a clean, modern **white–pink theme**.  
 The project is built using **React + Vite** and styled with **Tailwind CSS**.
 
+👉 Check the **Website** here: [angelic-salonandspa.web.app](https://angelic-salonandspa.web.app/)
+
 ![Preview](public/images/preview.png)
 
 ---
@@ -51,5 +53,3 @@ The app also includes a **Firebase-based login system** and an **admin dashboard
 ![ESLint](https://img.shields.io/badge/ESLint-4B32C3?style=for-the-badge&logo=eslint&logoColor=white)
 
 ---
-
-![Preview](https://imgur.com/a/TtpYLyq)
