@@ -4,7 +4,7 @@ A web-based **salon & spa booking system** designed with a clean, modern **white
 The project is built using **React + Vite** and styled with **Tailwind CSS**.
 
 👉 Check the **Website** here: [angelic-salonandspa.web.app](https://angelic-salonandspa.web.app/)  
-📚 For full documentation including images and videos, you can visit my portfolio: [Click Me!](https://portfolio-adnanalvito.vercel.app/projects/3)
+📚 For full documentation including images and videos, you can visit my portfolio: [Click Me!](https://adnanalvito.vercel.app/projects/3)
 
 ![Preview](public/images/preview.png)
 
